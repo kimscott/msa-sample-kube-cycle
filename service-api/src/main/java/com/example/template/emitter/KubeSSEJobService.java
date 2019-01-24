@@ -1,5 +1,7 @@
-package com.example.template;
+package com.example.template.emitter;
 
+import com.example.template.AppEntityBaseMessage;
+import com.example.template.AppEntityBaseMessageHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;

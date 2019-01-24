@@ -1,4 +1,4 @@
-package com.example.template;
+package com.example.template.emitter;
 
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 

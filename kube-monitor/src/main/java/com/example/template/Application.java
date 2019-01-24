@@ -17,13 +17,13 @@ public class Application {
     public static void main(String[] args) {
         applicationContext = SpringApplication.run(Application.class, args);
 
-        try {
-            KubeInstanceTask kubeInstanceTask = Application.applicationContext.getBean(KubeInstanceTask.class);
-            kubeInstanceTask.watchPod();
-        }catch (Exception e){
-            e.printStackTrace();
-            SpringApplication.exit(applicationContext);
-        }
+//        try {
+//            KubeInstanceTask kubeInstanceTask = Application.applicationContext.getBean(KubeInstanceTask.class);
+//            kubeInstanceTask.watchPod();
+//        }catch (Exception e){
+//            e.printStackTrace();
+//            SpringApplication.exit(applicationContext);
+//        }
 
     }
 }

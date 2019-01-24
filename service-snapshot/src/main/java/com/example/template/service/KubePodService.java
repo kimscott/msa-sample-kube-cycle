@@ -1,5 +1,7 @@
-package com.example.template;
+package com.example.template.service;
 
+import com.example.template.model.KubePod;
+import com.example.template.model.KubePodRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +19,7 @@ public class KubePodService {
 
     @CachePut(value="pod" ,key="#pod.kubePodId.namespace + #pod.kubePodId.name")
     public KubePod savePodStatus(KubePod pod){
-        LOG.info("pod.namespace='{}' pod.name='{}' " , pod.kubePodId.namespace , pod.kubePodId.name );
+        LOG.info("pod.namespace='{}' pod.name='{}' " , pod.getKubePodId().getNamespace() , pod.getKubePodId().getName() );
         return kubePodRepository.save(pod);
     }
 

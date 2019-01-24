@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -58,7 +59,7 @@ public class KubeInstanceTask implements InitializingBean {
         // kubenate Configuration setting
         ApiClient client = Config.fromToken(this.getHost(), this.getToken(), false);
         this.client = client;
-        client.getHttpClient().setReadTimeout(60, TimeUnit.MINUTES);
+        client.getHttpClient().setReadTimeout(10000, TimeUnit.MINUTES);
         Configuration.setDefaultApiClient(client);
     }
 
@@ -71,28 +72,8 @@ public class KubeInstanceTask implements InitializingBean {
     }
 
 
-//    @Scheduled(fixedRate = 2000)
 
-    /**
-     * 단순 조회로는 pod 가 삭제되고 변경되는 사항을 알수가 없다.
-     * 결국 실시간 상태 변화는 watch 로 구현해야함
-     */
-    public void schedule(){
-        ArrayList<KubeNamespace> namespaceList = this.getNamespace();
-//        System.out.println(namespaceList.toString());
-
-        // 사실.. pod 조회시 바로 카프카로 날리는게 좋지만.. 조작할수 있으니 여기서 메세지를 날림
-        namespaceList.forEach((item) -> {
-            List<KubePod> podList = item.getPodList();
-            podList.forEach((pod) -> {
-                System.out.println("Message: " + pod.toString() + " sent to topic: " + kubepod);
-                kafkaTemplate.send(new ProducerRecord<String, KubePod>(kubepod, pod.getKubePodId().getNamespace() , pod));
-            });
-
-        });
-
-    }
-
+    @Scheduled(fixedRate = 10000)
     public void watchPod() throws IOException, ApiException{
         CoreV1Api api = new CoreV1Api();
         Watch<V1Pod> watch =
@@ -124,6 +105,7 @@ public class KubeInstanceTask implements InitializingBean {
                     kp.setEndTime(new DateTime().toString());
                 }
 
+//                System.out.println("Message: " + item.type + " sent to topic: " + item.object.getMetadata().getName());
                 System.out.println("Message: " + kp.toString() + " sent to topic: " + kubepod);
                 kafkaTemplate.send(new ProducerRecord<String, KubePod>(kubepod, kp.getKubePodId().getNamespace() , kp));
 
@@ -132,6 +114,29 @@ public class KubeInstanceTask implements InitializingBean {
         } finally {
             watch.close();
         }
+    }
+
+
+
+    /**
+     * 단순 조회로는 pod 가 삭제되고 변경되는 사항을 알수가 없다.
+     * 결국 실시간 상태 변화는 watch 로 구현해야함
+     */
+//    @Scheduled(fixedRate = 2000)
+    public void schedule(){
+        ArrayList<KubeNamespace> namespaceList = this.getNamespace();
+//        System.out.println(namespaceList.toString());
+
+        // 사실.. pod 조회시 바로 카프카로 날리는게 좋지만.. 조작할수 있으니 여기서 메세지를 날림
+        namespaceList.forEach((item) -> {
+            List<KubePod> podList = item.getPodList();
+            podList.forEach((pod) -> {
+                System.out.println("Message: " + pod.toString() + " sent to topic: " + kubepod);
+                kafkaTemplate.send(new ProducerRecord<String, KubePod>(kubepod, pod.getKubePodId().getNamespace() , pod));
+            });
+
+        });
+
     }
 
     public ArrayList<KubeNamespace> getNamespace(){

@@ -1,5 +1,6 @@
-package com.example.template;
+package com.example.template.emitter;
 
+import com.example.template.AppEntityBaseMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;

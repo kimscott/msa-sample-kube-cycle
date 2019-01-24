@@ -1,10 +1,9 @@
-package com.example.template;
+package com.example.template.model;
 
 import lombok.Data;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.Date;
 
 @Data
 @Entity
