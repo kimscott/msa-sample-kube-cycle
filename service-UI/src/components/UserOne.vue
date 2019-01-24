@@ -13,7 +13,7 @@
         <div class="table">
             <h2>Pods</h2>
             <vuetable ref="pods"
-                      :fields="['Namespace', 'Name', 'statusType', 'phase', 'startTime', 'updateTime', 'endTime']"
+                      :fields="['kubePodId.namespace', 'kubePodId.name', 'statusType', 'phase', 'startTime', 'updateTime', 'endTime']"
                       :data="list"
             >
             </vuetable>
@@ -73,6 +73,12 @@
             if (this.selectedNamespace.name != undefined) {
                 this.startSSE();
             }
+            this.$http.get(`${API_HOST}/kube/pod`)
+            .then((result) => {
+                console.log(result)
+                this.list = result.data
+            })
+
         },
         watch: {
             selectedNamespace: function () {

@@ -23,8 +23,4 @@ public class KubePodService {
         return kubePodRepository.save(pod);
     }
 
-    @Cacheable(value="pod" ,key="#pod.kubePodId.namespace + #pod.kubePodId.name")
-    public KubePod checkPodStatus(KubePod pod){
-        return kubePodRepository.findById(pod.getKubePodId()).orElse(new KubePod());
-    }
 }

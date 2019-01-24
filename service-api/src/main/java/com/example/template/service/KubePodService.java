@@ -5,6 +5,7 @@ import com.example.template.model.KubePodRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -30,9 +31,15 @@ public class KubePodService {
         return kubePodRepository.findAll();
     }
 
-    @Cacheable(value="podByNameSapce")
+    @Cacheable(value="pod", key="#namespace")
     public Iterable<KubePod> getAllPodByNameSapce(String namespace){
         LOG.info("use getAllPodByNameSapce database");
         return kubePodRepository.findByKubePodIdNamespace(namespace);
+    }
+
+    @CacheEvict(value="pod")
+    public String update(String name) {
+        LOG.info("cache update .. {}", name);
+        return name;
     }
 }
