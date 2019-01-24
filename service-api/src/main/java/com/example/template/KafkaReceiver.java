@@ -16,9 +16,14 @@ public class KafkaReceiver {
 
     private static final Logger LOG = LoggerFactory.getLogger(KafkaReceiver.class);
 
+    private AppEntityBaseMessageHandler messageHandler;
+
     @KafkaListener(topics = "${topic.kubepod}")
     public void listenByObject(@Payload String message, ConsumerRecord<?, ?> consumerRecord) {
         System.out.println(message);
-        KubePod kubePod = new Gson().fromJson(message, KubePod.class);
+        Gson gson = new Gson();
+        KubePod kubePod = gson.fromJson(message, KubePod.class);
+        System.out.println(gson.toJson(kubePod));
+//        System.out.println(kubePod.getKubePodId());
     }
 }

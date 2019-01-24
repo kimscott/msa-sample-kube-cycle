@@ -24,10 +24,6 @@ public class SSERestController {
 
     private final CopyOnWriteArrayList<KubeEmitter> userBaseEmitters = new CopyOnWriteArrayList<>();
     public String nameSpace = null;
-    public Integer userNumber = null;
-
-    //test
-    HashMap<String,KubeEmitter> map = new HashMap<>();
 
     @GetMapping("/{nameSpace}")
     public SseEmitter getNewKube(HttpServletRequest request,
@@ -37,8 +33,6 @@ public class SSERestController {
         KubeEmitter emitter = new KubeEmitter(nameSpace);
         userBaseEmitters.add(emitter);
         this.nameSpace = nameSpace;
-        //test
-        map.put(nameSpace,emitter);
 
         emitter.onCompletion(() -> this.userBaseEmitters.remove(emitter));
         emitter.onTimeout(() -> {
@@ -51,20 +45,16 @@ public class SSERestController {
 
     @EventListener
     public void onKubeSse(AppEntityBaseMessage appEntityBaseMessage) {
-//        LOGGER.info(Boolean.toString(appEntityBaseMessage.getNameSpace().equals(nameSpace)));
-//        LOGGER.info(appEntityBaseMessage.getNameSpace());
-//        LOGGER.info(nameSpace);
+
         List<SseEmitter> deadEmitters = new ArrayList<>();
         this.userBaseEmitters.forEach(emitter -> {
             try {
-                //test
-               map.get(appEntityBaseMessage.getNameSpace()).send(appEntityBaseMessage);
-
-                    //emitter.send(appEntityBaseMessage);
                 /*
-                if(appEntityBaseMessage.getNameSpace().equals(nameSpace)) {
+                    todo : nameSpace 조건 부분
+                 */
+//                if(appEntityBaseMessage.getNameSpace().equals(nameSpace)) {
                     emitter.send(appEntityBaseMessage);
-                }*/
+//                }
             } catch (Exception e) {
                 LOGGER.info("dead");
                 deadEmitters.add(emitter);

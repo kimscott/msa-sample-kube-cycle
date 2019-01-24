@@ -18,43 +18,19 @@ public class AppEntityBaseMessageHandler {
     public AppEntityBaseMessageHandler(ApplicationEventPublisher eventPublisher) {
         this.eventPublisher = eventPublisher;
     }
-    @Async
-    public void subscribe() {
-        try {
-//            String str = stringRedisTemplate.getStringSerializer().deserialize(message.getBody());
-//            AppEntityBaseMessage appEntityBaseMessage =
-//                    JsonUtils.convertValue(JsonUtils.unmarshal(str), AppEntityBaseMessage.class);
-//
-//            //If body is null, set appEntity as body.
-//            if (appEntityBaseMessage.getBody() == null) {
-//                appEntityBaseMessage.setBody(appEntityBaseMessage.getAppEntity());
-//            }
 
-//            sseController.onKubeSse(appEntityBaseMessage);
-
-//            LOGGER.info("subscribe from redis , {} , {}",
-//                    appEntityBaseMessage.getTopic().toString(),
-//                    appEntityBaseMessage.getAppEntity() == null ? null : appEntityBaseMessage.getAppEntity().getName());
-        } catch (Exception ex) {
-//            LOGGER.error("subscribe from redis failed");
-        }
-    }
     @Async
-    public void publish(String nameSpace, String service, String pod, String deployment, String replicaSet) {
+    public void publish(String id, String jsonData) {
         try {
-//            LOGGER.info("publish message");
 
             AppEntityBaseMessage message = new AppEntityBaseMessage();
-            message.setNameSpace(nameSpace);
-            message.setService(service);
-            message.setPod(pod);
-            message.setDeployment(deployment);
-            message.setReplicaSet(replicaSet);
+            message.setId("data");
+            message.setMessage(jsonData);
 
             this.eventPublisher.publishEvent(message);
 
         } catch (Exception ex) {
-//            LOGGER.error("publish to redis failed, {} , {}", appEntity == null ? null : appEntity.getName());
+            LOGGER.error("Publish Error");
         }
     }
 }
