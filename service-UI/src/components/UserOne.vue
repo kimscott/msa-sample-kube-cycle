@@ -94,9 +94,9 @@
             startSSE: function () {
                 var me = this;
 
-                me.evtSource = new EventSource('http://localhost:8080/kubesse/' + me.selectedNamespace.name)
+                me.evtSource = new EventSource(`${API_HOST}/kubesse/` + me.selectedNamespace.name)
                 me.evtSource.onmessage = function (e) {
-                    // console.log(JSON.parse(e.data))
+                    console.log(JSON.parse(e.data))
                     var parse = JSON.parse(e.data);
                     me.list.push(parse)
                 }

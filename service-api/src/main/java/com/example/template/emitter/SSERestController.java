@@ -56,6 +56,7 @@ public class SSERestController {
                     emitter.send(appEntityBaseMessage);
 //                }
             } catch (Exception e) {
+                e.printStackTrace();
                 LOGGER.info("dead");
                 deadEmitters.add(emitter);
             }

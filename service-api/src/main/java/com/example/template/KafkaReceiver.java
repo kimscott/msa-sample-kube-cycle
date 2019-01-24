@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ public class KafkaReceiver {
 
     private static final Logger LOG = LoggerFactory.getLogger(KafkaReceiver.class);
 
+    @Autowired
     private AppEntityBaseMessageHandler messageHandler;
 
     @KafkaListener(topics = "${topic.kubepod}")
@@ -24,6 +26,7 @@ public class KafkaReceiver {
         Gson gson = new Gson();
         KubePod kubePod = gson.fromJson(message, KubePod.class);
         System.out.println(gson.toJson(kubePod));
+        messageHandler.publish("", gson.toJson(kubePod));
 //        System.out.println(kubePod.getKubePodId());
     }
 }
