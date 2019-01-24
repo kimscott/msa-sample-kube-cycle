@@ -9,6 +9,8 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class KubePodService {
 
@@ -17,14 +19,20 @@ public class KubePodService {
     @Autowired
     KubePodRepository kubePodRepository;
 
-    @CachePut(value="pod" ,key="#pod.kubePodId.namespace + #pod.kubePodId.name")
-    public KubePod savePodStatus(KubePod pod){
-        LOG.info("pod.namespace='{}' pod.name='{}' " , pod.getKubePodId().getNamespace() , pod.getKubePodId().getName() );
-        return kubePodRepository.save(pod);
-    }
-
     @Cacheable(value="pod" ,key="#pod.kubePodId.namespace + #pod.kubePodId.name")
     public KubePod checkPodStatus(KubePod pod){
         return kubePodRepository.findById(pod.getKubePodId()).orElse(new KubePod());
+    }
+
+    @Cacheable(value="pod")
+    public Iterable<KubePod> getAllPod(){
+        LOG.info("use getAllPod database");
+        return kubePodRepository.findAll();
+    }
+
+    @Cacheable(value="podByNameSapce")
+    public Iterable<KubePod> getAllPodByNameSapce(String namespace){
+        LOG.info("use getAllPodByNameSapce database");
+        return kubePodRepository.findByKubePodIdNamespace(namespace);
     }
 }
