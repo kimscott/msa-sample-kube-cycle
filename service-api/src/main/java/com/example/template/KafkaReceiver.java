@@ -1,6 +1,7 @@
 package com.example.template;
 
 import com.example.template.model.KubePod;
+import com.example.template.model.KubePodId;
 import com.example.template.service.KubePodService;
 import com.google.gson.Gson;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -29,10 +30,8 @@ public class KafkaReceiver {
         System.out.println(message);
         Gson gson = new Gson();
         KubePod kubePod = gson.fromJson(message, KubePod.class);
-
         kubePodService.update(kubePod);
         kubePodService.deleteCacheList(kubePod);
-
-        messageHandler.publish("", gson.toJson(kubePod));
+        messageHandler.publish(kubePod.getKubePodId().getNamespace(), gson.toJson(kubePod));
     }
 }
