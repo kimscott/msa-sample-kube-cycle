@@ -8,12 +8,9 @@ import axios from 'axios'
 Vue.config.productionTip = false
 Vue.prototype.$http = axios
 
-window.API_HOST = "http://serviceapi:8086"
-// window.API_HOST = "http://localhost:8086"
-
-
-console.log(process.env);
-console.log('process.env.API_HOST = ' + API_HOST);
+// window.API_HOST = "http://serviceapi:8086"
+window.API_HOST = process.env.VUE_APP_API_HOST
+console.log(process.env.VUE_APP_API_HOST);
 
 new Vue({
   router,
