@@ -31,7 +31,7 @@ public class KubePodService {
         return kubePodRepository.findAll();
     }
 
-    @Cacheable(value="pod", key="#namespace")
+//    @Cacheable(value="pod", key="#namespace")
     public Iterable<KubePod> getAllPodByNameSapce(String namespace){
         LOG.info("use getAllPodByNameSapce database");
         return kubePodRepository.findByKubePodIdNamespace(namespace);

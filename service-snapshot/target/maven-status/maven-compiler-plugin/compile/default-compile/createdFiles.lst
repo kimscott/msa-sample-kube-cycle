@@ -1,0 +1,8 @@
+com/example/template/KafkaReceiver.class
+com/example/template/service/KubePodService.class
+com/example/template/model/KubePodId.class
+com/example/template/model/KubePodRepository.class
+com/example/template/model/KubePod.class
+com/example/template/RedisConfig.class
+com/example/template/KafkaReceiverConfig.class
+com/example/template/Application.class
