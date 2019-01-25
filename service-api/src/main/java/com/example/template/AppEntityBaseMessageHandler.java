@@ -20,15 +20,14 @@ public class AppEntityBaseMessageHandler {
     }
 
     @Async
-    public void publish(String id, String jsonData) {
+    public void publish(String namespace, String jsonData) {
         try {
 
             AppEntityBaseMessage message = new AppEntityBaseMessage();
-            message.setId("data");
+            message.setNamespace(namespace);
             message.setMessage(jsonData);
-
+            LOGGER.error("Published");
             this.eventPublisher.publishEvent(message);
-
         } catch (Exception ex) {
             LOGGER.error("Publish Error");
         }

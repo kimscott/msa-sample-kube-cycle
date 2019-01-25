@@ -19,18 +19,18 @@
             </vuetable>
         </div>
         <!--<div class="table">-->
-            <!--<h2>Services</h2>-->
-            <!--<vuetable ref="services"-->
-                      <!--:fields="['nameSpace', 'service', 'pod', 'deployment', 'replicaSet']"-->
-                      <!--:data="list"-->
-            <!--&gt;-->
-            <!--</vuetable>-->
+        <!--<h2>Services</h2>-->
+        <!--<vuetable ref="services"-->
+        <!--:fields="['nameSpace', 'service', 'pod', 'deployment', 'replicaSet']"-->
+        <!--:data="list"-->
+        <!--&gt;-->
+        <!--</vuetable>-->
         <!--</div>-->
         <div class="table">
             <h2>Jobs</h2>
             <vuetable ref="jobs"
-                      :fields="['nameSpace', 'service', 'pod', 'deployment', 'replicaSet']"
-                      :data="list"
+                      :fields="['kubePodId.namespace', 'kubePodId.name', 'statusType', 'phase', 'startTime', 'updateTime', 'endTime']"
+                      :data="list2"
             >
             </vuetable>
         </div>
@@ -54,12 +54,10 @@
         data() {
             return {
                 evtSource: null,
-                nameSpaceList: [
-                    {id: 1, name: 'One'},
-                    {id: 2, name: 'Two'}
-                ],
+                nameSpaceList: [{id: 0, name: 'All'}],
                 selectedNamespace: {},
-                list: []
+                list: [],
+                list2: []
             }
         },
 
@@ -70,22 +68,45 @@
             }
         },
         mounted() {
-            if (this.selectedNamespace.name != undefined) {
-                this.startSSE();
-            }
-            this.$http.get(`${API_HOST}/kube/pod`)
-            .then((result) => {
-                console.log(result)
-                this.list = result.data
-            })
+            this.startSSE();
+            var me = this
+            this.$http.get(`${API_HOST}/kube/pod/`)
+                .then((result) => {
+                    // console.log(result);
+                    me.list = result.data;
+                    var i = 1;
+                    var namespaceListTmp = [];
 
+                    result.data.forEach(function (pods) {
+                        if (!namespaceListTmp.includes(pods.kubePodId.namespace)) {
+                            namespaceListTmp.push(pods.kubePodId.namespace)
+                            me.nameSpaceList.push({id: i, name: pods.kubePodId.namespace});
+                            i++
+                        }
+                    })
+
+                })
         },
+
         watch: {
-            selectedNamespace: function () {
-                if (this.selectedNamespace.name != undefined) {
-                    this.startSSE();
-                }
-            }
+            selectedNamespace: function (newVal) {
+                var me = this;
+                var name = newVal.name
+                if(newVal.name == 'All') {
+                    if (this.evtSource != null) {
+                        this.evtSource.close();
+                        this.evtSource = new EventSource('http://localhost:8086/kubesse/')
+                    }
+                } else if (this.evtSource != null) {
+                    this.evtSource.close();
+                    this.evtSource = new EventSource('http://localhost:8086/kubesse/?nameSpace=' + name)
+                };
+                this.$http.get(`${API_HOST}/kube/pod/` + name)
+                    .then((result) => {
+                        me.list = [];
+                        me.list = result.data;
+                    });
+            },
         },
         methods: {
             methodToRunOnSelect(payload) {
@@ -94,11 +115,14 @@
             startSSE: function () {
                 var me = this;
 
-                me.evtSource = new EventSource('http://localhost:8080/kubesse/' + me.selectedNamespace.name)
+                me.evtSource = new EventSource('http://localhost:8086/kubesse/')
+                var tmp = [];
                 me.evtSource.onmessage = function (e) {
-                    // console.log(JSON.parse(e.data))
                     var parse = JSON.parse(e.data);
-                    me.list.push(parse)
+                    var parseMessage = JSON.parse(parse.message);
+                    me.list.forEach(function (list, index) {
+                        console.log(list)
+                    });
                 }
 
                 me.evtSource.onerror = function (e) {
@@ -118,11 +142,13 @@
     h3 {
         margin: 40px 0 0;
     }
+
     .table {
         float: left;
         width: 45%;
-        margin : 5px;
+        margin: 5px;
     }
+
     ul {
         list-style-type: none;
         padding: 0;

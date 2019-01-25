@@ -25,7 +25,7 @@ public class KubePodService {
         return kubePodRepository.findById(pod.getKubePodId()).orElse(new KubePod());
     }
 
-    @Cacheable(value="pod")
+//    @Cacheable(value="pod")
     public Iterable<KubePod> getAllPod(){
         LOG.info("use getAllPod database");
         return kubePodRepository.findAll();
