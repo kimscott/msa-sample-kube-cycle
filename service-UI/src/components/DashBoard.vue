@@ -6,7 +6,6 @@
                       :selected="selectedNamespace"
                       v-on:updateOption="methodToRunOnSelect"
                       :placeholder="'Select an Namespace'"
-
             >
             </dropdown>
         </div>
@@ -161,12 +160,19 @@
 
                     me.list.some(function (listTmp, index) {
                         if (listTmp.kubePodId.name == parseMessage.kubePodId.name) {
-                            console.log(me.list[index] + ':' + parseMessage);
-                            me.list = [
-                                ...me.list.slice(0, index),
-                                parseMessage,
-                                ...me.list.slice(index + 1)
-                            ]
+                            // console.log(me.list[index] + ':' + parseMessage);
+                            if(parseMessage.statusType=='DELETED') {
+                                me.list = [
+                                    ...me.list.slice(0, index),
+                                    ...me.list.slice(index + 1)
+                                ]
+                            } else {
+                                me.list = [
+                                    ...me.list.slice(0, index),
+                                    parseMessage,
+                                    ...me.list.slice(index + 1)
+                                ]
+                            }
                             return;
                         } else if (!listNameListTmp.includes(parseMessage.kubePodId.name)) {
                             if (!(parseMessage.statusType == 'DELETED')) {
