@@ -69,37 +69,29 @@
         },
         mounted() {
             this.startSSE();
-            var me = this
-            this.$http.get(`${API_HOST}/kube/pod/`)
-                .then((result) => {
-                    // console.log(result);
-                    me.list = result.data;
-                    var i = 1;
-                    var namespaceListTmp = [];
+            this.getNameSpace();
+            // var me = this
 
-                    result.data.forEach(function (pods) {
-                        if (!namespaceListTmp.includes(pods.kubePodId.namespace)) {
-                            namespaceListTmp.push(pods.kubePodId.namespace)
-                            me.nameSpaceList.push({id: i, name: pods.kubePodId.namespace});
-                            i++
-                        }
-                    })
-
-                })
         },
 
         watch: {
             selectedNamespace: function (newVal) {
                 var me = this;
                 var name = newVal.name
-                if(newVal.name == 'All') {
+                if (newVal.name == 'All') {
+                    this.$http.get(`${API_HOST}/kube/pod/`)
+                        .then((result) => {
+                            me.list = [];
+                            me.list = result.data;
+                        });
                     if (this.evtSource != null) {
                         this.evtSource.close();
-                        this.evtSource = new EventSource('http://localhost:8086/kubesse/')
+                        me.startSSE();
+                        // this.evtSource = new EventSource('http://localhost:8086/kubesse/')
                     }
                 } else if (this.evtSource != null) {
                     this.evtSource.close();
-                    this.evtSource = new EventSource('http://localhost:8086/kubesse/?nameSpace=' + name)
+                    me.startSSE(name);
                 };
                 this.$http.get(`${API_HOST}/kube/pod/` + name)
                     .then((result) => {
@@ -112,24 +104,77 @@
             methodToRunOnSelect(payload) {
                 this.selectedNamespace = payload;
             },
-            startSSE: function () {
+            getNameSpace: function () {
                 var me = this;
+                this.$http.get(`${API_HOST}/kube/pod/`)
+                    .then((result) => {
+                        // console.log(result);
+                        if(me.list.length == 0) {
+                            me.list = result.data;
+                        }
+                        var i = 1;
+                        var namespaceListTmp = [];
+                        if(me.nameSpaceList.length > 0) {
+                            me.nameSpaceList.forEach(function (podName) {
+                                if(!namespaceListTmp.includes(podName.name)) {
+                                    namespaceListTmp.push(podName.name)
+                                }
+                            })
+                        }
 
-                me.evtSource = new EventSource('http://localhost:8086/kubesse/')
+                        result.data.forEach(function (pods) {
+                            if (!namespaceListTmp.includes(pods.kubePodId.namespace)) {
+                                namespaceListTmp.push(pods.kubePodId.namespace)
+                                me.nameSpaceList.push({id: i, name: pods.kubePodId.namespace});
+                                i++
+                            }
+                        })
+
+                    })
+            },
+            startSSE: function (name) {
+                var me = this;
+                // this.getNameSpace();
+                if (name == null) {
+                    me.evtSource = new EventSource('http://localhost:8086/kubesse/')
+                } else {
+                    this.evtSource = new EventSource('http://localhost:8086/kubesse/?nameSpace=' + name)
+                }
                 var tmp = [];
                 me.evtSource.onmessage = function (e) {
                     var parse = JSON.parse(e.data);
                     var parseMessage = JSON.parse(parse.message);
-                    me.list.forEach(function (list, index) {
-                        console.log(list)
+                    var listNameListTmp = []
+                    me.list.forEach(function (name) {
+                        listNameListTmp.push(name.kubePodId.name)
                     });
-                }
 
+                    me.list.some(function (listTmp, index) {
+                        // console.log("some" + index)
+                        if (listTmp.kubePodId.name == parseMessage.kubePodId.name) {
+                            console.log(me.list[index] + ':' + parseMessage);
+                            me.list = [
+                                ...me.list.slice(0, index),
+                                parseMessage,
+                                ...me.list.slice(index + 1)
+                            ]
+                            return;
+                        } else if (!listNameListTmp.includes(parseMessage.kubePodId.name)){
+                            me.list.push(parseMessage)
+                            listNameListTmp.push(parseMessage.kubePodId.name)
+                            return;
+                        }
+                    })
+                }
                 me.evtSource.onerror = function (e) {
                     if (me.evtSource) {
                         console.log("closing evtSource and reconnect");
                         me.evtSource.close();
-                        me.startSSE();
+                        if (me.selectedNamespace.name != null) {
+                            me.startSSE(me.selectedNamespace.name);
+                        } else {
+                            me.startSSE();
+                        }
                     }
                 }
             }
