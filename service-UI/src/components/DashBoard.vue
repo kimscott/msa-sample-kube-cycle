@@ -76,8 +76,8 @@
         watch: {
             selectedNamespace: function (newVal) {
                 var me = this;
-                var name = newVal.name
-                if (newVal.name == 'All') {
+                var name = newVal.name;
+                if (name == 'All') {
                     this.$http.get(`${API_HOST}/kube/pod/`)
                         .then((result) => {
                             me.list = [];
@@ -87,21 +87,23 @@
                         this.evtSource.close();
                         me.startSSE();
                     }
-                } else if (this.evtSource != null) {
-                    this.evtSource.close();
-                    me.startSSE(name);
-                };
-                this.$http.get(`${API_HOST}/kube/pod/` + name)
-                    .then((result) => {
-                        me.list = [];
-                        if(me.list.length == 0) {
-                            result.data.forEach(function (data) {
-                                if(!(data.statusType == 'DELETED')) {
-                                    me.list.push(data)
-                                }
-                            })
-                        }
-                    });
+                } else {
+                    this.$http.get(`${API_HOST}/kube/pod/` + name)
+                        .then((result) => {
+                            me.list = [];
+                            if (me.list.length == 0) {
+                                result.data.forEach(function (data) {
+                                    if (!(data.statusType == 'DELETED')) {
+                                        me.list.push(data)
+                                    }
+                                })
+                            }
+                        });
+                    if (this.evtSource != null) {
+                        this.evtSource.close();
+                        me.startSSE(name);
+                    }
+                }
             },
         },
         methods: {
@@ -113,18 +115,18 @@
                 this.$http.get(`${API_HOST}/kube/pod/`)
                     .then((result) => {
                         // console.log(result);
-                        if(me.list.length == 0) {
+                        if (me.list.length == 0) {
                             result.data.forEach(function (data) {
-                                if(!(data.statusType == 'DELETED')) {
+                                if (!(data.statusType == 'DELETED')) {
                                     me.list.push(data)
                                 }
                             })
                         }
                         var i = 1;
                         var namespaceListTmp = [];
-                        if(me.nameSpaceList.length > 0) {
+                        if (me.nameSpaceList.length > 0) {
                             me.nameSpaceList.forEach(function (podName) {
-                                if(!namespaceListTmp.includes(podName.name)) {
+                                if (!namespaceListTmp.includes(podName.name)) {
                                     namespaceListTmp.push(podName.name)
                                 }
                             })
@@ -166,8 +168,8 @@
                                 ...me.list.slice(index + 1)
                             ]
                             return;
-                        } else if (!listNameListTmp.includes(parseMessage.kubePodId.name)){
-                            if(!(parseMessage.statusType=='DELETED')) {
+                        } else if (!listNameListTmp.includes(parseMessage.kubePodId.name)) {
+                            if (!(parseMessage.statusType == 'DELETED')) {
                                 me.list.push(parseMessage)
                                 listNameListTmp.push(parseMessage.kubePodId.name)
                                 return;
