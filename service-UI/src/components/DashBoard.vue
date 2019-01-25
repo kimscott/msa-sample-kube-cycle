@@ -1,5 +1,5 @@
 <template>
-    <div class="userone" style="margin: 10px">
+    <div class="DashBoard" style="margin: 10px">
         <h1> List </h1>
         <div>
             <dropdown :options="nameSpaceList"
@@ -43,7 +43,7 @@
 
     export default {
 
-        name: 'UserOne',
+        name: 'DashBoard',
         props: {
             msg: String,
         },
@@ -68,10 +68,9 @@
             }
         },
         mounted() {
+            var me = this
             this.startSSE();
             this.getNameSpace();
-            // var me = this
-
         },
 
         watch: {
@@ -87,7 +86,6 @@
                     if (this.evtSource != null) {
                         this.evtSource.close();
                         me.startSSE();
-                        // this.evtSource = new EventSource('http://localhost:8086/kubesse/')
                     }
                 } else if (this.evtSource != null) {
                     this.evtSource.close();
@@ -96,7 +94,13 @@
                 this.$http.get(`${API_HOST}/kube/pod/` + name)
                     .then((result) => {
                         me.list = [];
-                        me.list = result.data;
+                        if(me.list.length == 0) {
+                            result.data.forEach(function (data) {
+                                if(!(data.statusType == 'DELETED')) {
+                                    me.list.push(data)
+                                }
+                            })
+                        }
                     });
             },
         },
@@ -110,7 +114,11 @@
                     .then((result) => {
                         // console.log(result);
                         if(me.list.length == 0) {
-                            me.list = result.data;
+                            result.data.forEach(function (data) {
+                                if(!(data.statusType == 'DELETED')) {
+                                    me.list.push(data)
+                                }
+                            })
                         }
                         var i = 1;
                         var namespaceListTmp = [];
@@ -129,8 +137,8 @@
                                 i++
                             }
                         })
-
                     })
+
             },
             startSSE: function (name) {
                 var me = this;
@@ -144,13 +152,12 @@
                 me.evtSource.onmessage = function (e) {
                     var parse = JSON.parse(e.data);
                     var parseMessage = JSON.parse(parse.message);
-                    var listNameListTmp = []
+                    var listNameListTmp = [];
                     me.list.forEach(function (name) {
                         listNameListTmp.push(name.kubePodId.name)
                     });
 
                     me.list.some(function (listTmp, index) {
-                        // console.log("some" + index)
                         if (listTmp.kubePodId.name == parseMessage.kubePodId.name) {
                             console.log(me.list[index] + ':' + parseMessage);
                             me.list = [
@@ -160,9 +167,11 @@
                             ]
                             return;
                         } else if (!listNameListTmp.includes(parseMessage.kubePodId.name)){
-                            me.list.push(parseMessage)
-                            listNameListTmp.push(parseMessage.kubePodId.name)
-                            return;
+                            if(!(parseMessage.statusType=='DELETED')) {
+                                me.list.push(parseMessage)
+                                listNameListTmp.push(parseMessage.kubePodId.name)
+                                return;
+                            }
                         }
                     })
                 }
@@ -177,7 +186,7 @@
                         }
                     }
                 }
-            }
+            },
         },
     }
 </script>

@@ -6,7 +6,7 @@ Vue.use(Router);
 
 var backend;
 
-console.log(process.env);
+// console.log(process.env);
 
 
 export default new Router({

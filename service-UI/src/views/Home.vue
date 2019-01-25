@@ -1,17 +1,17 @@
 <template>
     <div class="home">
-        <UserOne/>
+        <DashBoard/>
     </div>
 </template>
 
 <script>
     // @ is an alias to /src
-    import UserOne from '@/components/UserOne.vue'
+    import DashBoard from '@/components/DashBoard.vue'
 
     export default {
         name: 'home',
         components: {
-            UserOne
+            DashBoard
         }
     }
 </script>
