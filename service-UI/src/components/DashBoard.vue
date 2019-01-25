@@ -1,12 +1,11 @@
 <template>
-    <div class="userone" style="margin: 10px">
+    <div class="DashBoard" style="margin: 10px">
         <h1> List </h1>
         <div>
             <dropdown :options="nameSpaceList"
                       :selected="selectedNamespace"
                       v-on:updateOption="methodToRunOnSelect"
                       :placeholder="'Select an Namespace'"
-
             >
             </dropdown>
         </div>
@@ -43,7 +42,7 @@
 
     export default {
 
-        name: 'UserOne',
+        name: 'DashBoard',
         props: {
             msg: String,
         },
@@ -68,17 +67,16 @@
             }
         },
         mounted() {
+            var me = this
             this.startSSE();
             this.getNameSpace();
-            // var me = this
-
         },
 
         watch: {
             selectedNamespace: function (newVal) {
                 var me = this;
-                var name = newVal.name
-                if (newVal.name == 'All') {
+                var name = newVal.name;
+                if (name == 'All') {
                     this.$http.get(`${API_HOST}/kube/pod/`)
                         .then((result) => {
                             me.list = [];
@@ -87,17 +85,24 @@
                     if (this.evtSource != null) {
                         this.evtSource.close();
                         me.startSSE();
-                        // this.evtSource = new EventSource('http://localhost:8086/kubesse/')
                     }
-                } else if (this.evtSource != null) {
-                    this.evtSource.close();
-                    me.startSSE(name);
-                };
-                this.$http.get(`${API_HOST}/kube/pod/` + name)
-                    .then((result) => {
-                        me.list = [];
-                        me.list = result.data;
-                    });
+                } else {
+                    this.$http.get(`${API_HOST}/kube/pod/` + name)
+                        .then((result) => {
+                            me.list = [];
+                            if (me.list.length == 0) {
+                                result.data.forEach(function (data) {
+                                    if (!(data.statusType == 'DELETED')) {
+                                        me.list.push(data)
+                                    }
+                                })
+                            }
+                        });
+                    if (this.evtSource != null) {
+                        this.evtSource.close();
+                        me.startSSE(name);
+                    }
+                }
             },
         },
         methods: {
@@ -109,14 +114,18 @@
                 this.$http.get(`${API_HOST}/kube/pod/`)
                     .then((result) => {
                         // console.log(result);
-                        if(me.list.length == 0) {
-                            me.list = result.data;
+                        if (me.list.length == 0) {
+                            result.data.forEach(function (data) {
+                                if (!(data.statusType == 'DELETED')) {
+                                    me.list.push(data)
+                                }
+                            })
                         }
                         var i = 1;
                         var namespaceListTmp = [];
-                        if(me.nameSpaceList.length > 0) {
+                        if (me.nameSpaceList.length > 0) {
                             me.nameSpaceList.forEach(function (podName) {
-                                if(!namespaceListTmp.includes(podName.name)) {
+                                if (!namespaceListTmp.includes(podName.name)) {
                                     namespaceListTmp.push(podName.name)
                                 }
                             })
@@ -129,8 +138,8 @@
                                 i++
                             }
                         })
-
                     })
+
             },
             startSSE: function (name) {
                 var me = this;
@@ -144,25 +153,33 @@
                 me.evtSource.onmessage = function (e) {
                     var parse = JSON.parse(e.data);
                     var parseMessage = JSON.parse(parse.message);
-                    var listNameListTmp = []
+                    var listNameListTmp = [];
                     me.list.forEach(function (name) {
                         listNameListTmp.push(name.kubePodId.name)
                     });
 
                     me.list.some(function (listTmp, index) {
-                        // console.log("some" + index)
                         if (listTmp.kubePodId.name == parseMessage.kubePodId.name) {
-                            console.log(me.list[index] + ':' + parseMessage);
-                            me.list = [
-                                ...me.list.slice(0, index),
-                                parseMessage,
-                                ...me.list.slice(index + 1)
-                            ]
+                            // console.log(me.list[index] + ':' + parseMessage);
+                            if(parseMessage.statusType=='DELETED') {
+                                me.list = [
+                                    ...me.list.slice(0, index),
+                                    ...me.list.slice(index + 1)
+                                ]
+                            } else {
+                                me.list = [
+                                    ...me.list.slice(0, index),
+                                    parseMessage,
+                                    ...me.list.slice(index + 1)
+                                ]
+                            }
                             return;
-                        } else if (!listNameListTmp.includes(parseMessage.kubePodId.name)){
-                            me.list.push(parseMessage)
-                            listNameListTmp.push(parseMessage.kubePodId.name)
-                            return;
+                        } else if (!listNameListTmp.includes(parseMessage.kubePodId.name)) {
+                            if (!(parseMessage.statusType == 'DELETED')) {
+                                me.list.push(parseMessage)
+                                listNameListTmp.push(parseMessage.kubePodId.name)
+                                return;
+                            }
                         }
                     })
                 }
@@ -177,7 +194,7 @@
                         }
                     }
                 }
-            }
+            },
         },
     }
 </script>
