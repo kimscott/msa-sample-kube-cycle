@@ -145,9 +145,9 @@
                 var me = this;
                 // this.getNameSpace();
                 if (name == null) {
-                    me.evtSource = new EventSource('http://localhost:8086/kubesse/')
+                    me.evtSource = new EventSource(`${API_HOST}/kubesse/`)
                 } else {
-                    this.evtSource = new EventSource('http://localhost:8086/kubesse/?nameSpace=' + name)
+                    this.evtSource = new EventSource(`${API_HOST}/kubesse/?nameSpace=` + name)
                 }
                 var tmp = [];
                 me.evtSource.onmessage = function (e) {

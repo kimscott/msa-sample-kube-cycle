@@ -20,4 +20,11 @@ docker build -t sanaloveyou/servicemonitor .
 docker push sanaloveyou/servicemonitor
 cd ..
 
+
+cd service-UI
+npm run build
+docker build -t sanaloveyou/serviceui .
+docker push sanaloveyou/serviceui
+cd ..
+
 ```

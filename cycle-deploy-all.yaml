@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: serviceapi-deploy
+  labels:
+    app: serviceapi-deploy
+spec:
+  selector:
+    matchLabels:
+      app: serviceapi-deploy
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: serviceapi-deploy
+    spec:
+      containers:
+        - name: serviceapi
+          image: sanaloveyou/serviceapi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: servicesnap-deploy
+  labels:
+    app: servicesnap-deploy
+spec:
+  selector:
+    matchLabels:
+      app: servicesnap-deploy
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: servicesnap-deploy
+    spec:
+      containers:
+        - name: servicesnap
+          image: sanaloveyou/servicesnap
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: servicemonitor-deploy
+  labels:
+    app: servicemonitor-deploy
+spec:
+  selector:
+    matchLabels:
+      app: servicemonitor-deploy
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: servicemonitor-deploy
+    spec:
+      containers:
+        - name: servicemonitor
+          image: sanaloveyou/servicemonitor
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: serviceui-deploy
+  labels:
+    app: serviceui-deploy
+spec:
+  selector:
+    matchLabels:
+      app: serviceui-deploy
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: serviceui-deploy
+    spec:
+      containers:
+        - name: serviceui
+          image: sanaloveyou/serviceui:v1
+          env:
+          - name: VUE_APP_API_HOST
+            value: "http://serviceapi:8080"
+
