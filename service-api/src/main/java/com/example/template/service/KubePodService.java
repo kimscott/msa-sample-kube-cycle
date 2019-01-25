@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -37,9 +38,31 @@ public class KubePodService {
         return kubePodRepository.findByKubePodIdNamespace(namespace);
     }
 
-    @CacheEvict(value="pod")
-    public String update(String name) {
-        LOG.info("cache update .. {}", name);
-        return name;
+
+    /**
+     * pod 의 변경이 일어났을때 관련된 모든 cache 를 변경시킨다.
+     * @param pod
+     * @return
+     */
+    @Caching(put = {
+            @CachePut(value = "pod", key="#pod.kubePodId.namespace + #pod.kubePodId.name")
+    })
+    public String update(KubePod pod) {
+        LOG.info("cache update .. {}", pod.toString());
+        return "";
+    }
+
+    /**
+     * pod 의 변경이 일어났을때 관련된 모든 cache 를 삭제시킨다.
+     * @param pod
+     * @return
+     */
+    @Caching(evict = {
+            @CacheEvict(value = "pod"),
+            @CacheEvict(value = "pod", key ="#pod.kubePodId.namespace"),
+    })
+    public String deleteCacheList(KubePod pod) {
+        LOG.info("cache delete .. {}", pod.toString());
+        return "";
     }
 }

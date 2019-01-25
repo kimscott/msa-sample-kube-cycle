@@ -5,10 +5,7 @@ import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Configuration;
 import io.kubernetes.client.apis.CoreV1Api;
-import io.kubernetes.client.models.V1Namespace;
-import io.kubernetes.client.models.V1NamespaceList;
-import io.kubernetes.client.models.V1Pod;
-import io.kubernetes.client.models.V1PodList;
+import io.kubernetes.client.models.*;
 import io.kubernetes.client.util.Config;
 import io.kubernetes.client.util.Watch;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -116,12 +113,52 @@ public class KubeInstanceTask implements InitializingBean {
         }
     }
 
+//    @Scheduled(fixedRate = 10000)
+    public void watchService() throws IOException, ApiException{
+        CoreV1Api api = new CoreV1Api();
+        Watch<V1Service> watch =
+                Watch.createWatch(
+                        client,
+                        api.listServiceForAllNamespacesCall(
+                                null, null, null, null, null, null, null, null, Boolean.TRUE, null, null),
+                        new TypeToken<Watch.Response<V1Service>>() {}.getType());
+
+        try {
+            for (Watch.Response<V1Service> item : watch) {
+//                System.out.printf("%s : %s , %s %n" , item.object.getMetadata().getName(), item.type, item.object.getStatus() );
+                KubeService ks = new KubeService();
+
+                KubePodId kpid = new KubePodId();
+                kpid.setName(item.object.getMetadata().getName());
+                kpid.setNamespace(item.object.getMetadata().getNamespace());
+                ks.setKubePodId(kpid);
+                ks.setStatusType(item.type);
+                ks.setServiceType(item.object.getSpec().getType());
+                ks.setClusterIp(item.object.getSpec().getClusterIP());
+                ks.setExternalIp(item.object.getStatus().getLoadBalancer().getIngress() != null ?  item.object.getStatus().getLoadBalancer().getIngress().get(0).getHostname() : "<none>");
+
+                ks.setStartTime(item.object.getMetadata().getCreationTimestamp().toString());
+
+                List<V1ServicePort> portList = item.object.getSpec().getPorts();
+                String ports = "";
+                for(V1ServicePort servicePort : portList){
+                    // TODO 여러개가 있으면 좀 다르겠지만 일단 하나만 있다고 가정하고 그냥 만들었음
+                    ports = servicePort.getPort() + (servicePort.getNodePort() != null ? ":"+servicePort.getNodePort() : "") + "/" + servicePort.getProtocol();
+                }
+
+                ks.setPorts(ports);
+
+            }
+        } finally {
+            watch.close();
+        }
+    }
 
 
     /**
      * 단순 조회로는 pod 가 삭제되고 변경되는 사항을 알수가 없다.
      * 결국 실시간 상태 변화는 watch 로 구현해야함
-     */
+
 //    @Scheduled(fixedRate = 2000)
     public void schedule(){
         ArrayList<KubeNamespace> namespaceList = this.getNamespace();
@@ -188,4 +225,5 @@ public class KubeInstanceTask implements InitializingBean {
 
         return list;
     }
+     */
 }

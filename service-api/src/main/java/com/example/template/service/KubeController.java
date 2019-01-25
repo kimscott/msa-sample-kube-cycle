@@ -26,7 +26,7 @@ public class KubeController {
         Iterable<KubePod> it = kubePodService.getAllPod();
         for (KubePod item : it) {
             list.add(item);
-//            System.out.println(item.getKubePodId().getName());
+            System.out.println(item.getKubePodId().getName());
         }
 
         return list;

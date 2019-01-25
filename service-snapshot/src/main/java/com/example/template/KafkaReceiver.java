@@ -42,7 +42,12 @@ public class KafkaReceiver {
     public void listenByObject(@Payload String message, ConsumerRecord<?, ?> consumerRecord) {
         System.out.println(message);
         KubePod kubePod = new Gson().fromJson(message, KubePod.class);
-        kubePodService.savePodStatus(kubePod);
+
+        if( "DELETED".equals(kubePod.getStatusType())){
+            kubePodService.deletePod(kubePod);
+        }else{
+            kubePodService.savePodStatus(kubePod);
+        }
     }
 
 
