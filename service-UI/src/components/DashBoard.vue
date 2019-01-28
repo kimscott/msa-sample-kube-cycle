@@ -187,11 +187,13 @@
                     if (me.evtSource) {
                         console.log("closing evtSource and reconnect");
                         me.evtSource.close();
-                        if (me.selectedNamespace.name != null) {
+                        setTimeout(function(){
+                            if (me.selectedNamespace.name != null) {
                             me.startSSE(me.selectedNamespace.name);
                         } else {
                             me.startSSE();
-                        }
+                        }},3000)
+
                     }
                 }
             },

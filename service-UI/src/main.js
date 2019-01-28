@@ -9,8 +9,13 @@ Vue.config.productionTip = false
 Vue.prototype.$http = axios
 
 // window.API_HOST = "http://serviceapi:8086"
-window.API_HOST = process.env.VUE_APP_API_HOST
-console.log(process.env.VUE_APP_API_HOST);
+if( process.env.NODE_ENV == "development" ){
+  window.API_HOST = "http://localhost:8086"
+}else{
+  window.API_HOST = process.env.VUE_APP_API_HOST
+}
+
+console.log(process.env);
 
 new Vue({
   router,
