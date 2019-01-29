@@ -25,6 +25,7 @@
         <!--&gt;-->
         <!--</vuetable>-->
         <!--</div>-->
+        <!--
         <div class="table">
             <h2>Jobs</h2>
             <vuetable ref="jobs"
@@ -33,6 +34,7 @@
             >
             </vuetable>
         </div>
+        -->
     </div>
 </template>
 
@@ -209,7 +211,7 @@
 
     .table {
         float: left;
-        width: 45%;
+        width: 100%;
         margin: 5px;
     }
 

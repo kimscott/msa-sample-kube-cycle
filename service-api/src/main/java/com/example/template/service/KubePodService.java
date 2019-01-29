@@ -32,6 +32,11 @@ public class KubePodService {
         return kubePodRepository.findAll();
     }
 
+    public Iterable<KubePod> getAllPodWithoutCache(){
+        LOG.info("use getAllPod database");
+        return kubePodRepository.findAll();
+    }
+
     @Cacheable(value="pod", key="#namespace")
     public Iterable<KubePod> getAllPodByNameSapce(String namespace){
         LOG.info("use getAllPodByNameSapce database");

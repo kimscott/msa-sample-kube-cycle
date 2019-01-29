@@ -79,5 +79,5 @@ spec:
           image: sanaloveyou/serviceui:v1
           env:
           - name: VUE_APP_API_HOST
-            value: "http://serviceapi:8080"
+            value: "https://ac919429a22b611e9884d02be6ea23ef-400105267.ap-northeast-2.elb.amazonaws.com"
 

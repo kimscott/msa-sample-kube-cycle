@@ -1,6 +1,7 @@
 package com.example.template.service;
 
 import com.example.template.model.KubePod;
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +27,7 @@ public class KubeController {
         Iterable<KubePod> it = kubePodService.getAllPod();
         for (KubePod item : it) {
             list.add(item);
-            System.out.println(item.getKubePodId().getName());
+//            System.out.println(item.getKubePodId().getName());
         }
 
         return list;
@@ -39,6 +40,23 @@ public class KubeController {
     ) throws Exception {
         List<KubePod> list = new ArrayList<KubePod>();
         Iterable<KubePod> it = kubePodService.getAllPodByNameSapce(namespace);
+        for (KubePod item : it) {
+            list.add(item);
+//            System.out.println(item.getKubePodId().getName());
+        }
+
+        return list;
+    }
+
+
+    @Test
+    @RequestMapping(value = "/podWithoutCache", method = RequestMethod.GET, produces = "application/json;charset=UTF-8")
+    public List<KubePod> getAllPodWithoutCache(HttpServletRequest request,
+                                     HttpServletResponse response
+    ) throws Exception {
+
+        List<KubePod> list = new ArrayList<KubePod>();
+        Iterable<KubePod> it = kubePodService.getAllPodWithoutCache();
         for (KubePod item : it) {
             list.add(item);
 //            System.out.println(item.getKubePodId().getName());
