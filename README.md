@@ -94,7 +94,7 @@ foo@bar:~$ siege --concurrent=100 --reps=10 --time=60S -b http://localhost:8086/
  ```
  
  ```bash
-# http://localhost:8086/kube/podWithoutCache (Without Cache) // user 100명, REPS 10회, Time 60초간, delay 0의 설정으로 부하를 줌
+# http://localhost:8086/kube/podWithoutCache (Without Cache) 로 user 100명, REPS 10회, Time 60초간, delay 0의 설정으로 부하를 줌
 foo@bar:~$ siege --concurrent=100 --reps=10 --time=60S http://localhost:8086/kube/podWithoutCache
 
 # Lifting the server siege... 
