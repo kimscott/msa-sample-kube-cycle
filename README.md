@@ -115,8 +115,8 @@ $ siege --concurrent=100 --reps=10 --time=60S http://localhost:8086/kube/podWith
 
 ### Result
 
-```console
- # 캐시가 없는 경우                                 # 캐시가 있는 경우               
+```bash
+ # 캐시가 없는 경우                                   # 캐시가 있는 경우               
   Transactions:		       10388 hits            Transactions:                32676 hits     
   Availability:		      100.00 %               Availability:               100.00 %
   Elapsed time:		       59.89 secs            Elapsed time:                59.92 secs 
