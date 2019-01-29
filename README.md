@@ -70,11 +70,14 @@ LoadBalancer로 서비스 타입 변경
 ```
 ---
 ### @Siege Example
+
+##### 같은 부하를 Cache가 있는 곳과 Cache가 없는 곳에 걸어서 비교를 해본다.
+설정값 : user 100명, REPS 10회, Time 60초간, delay 0
+
 ```bash
-# http://localhost:8086/kube/pod // user 100, REPS 10, Time 60s, delay 0 
+# http://localhost:8086/kube/pod로 (Cached) user 100명, REPS 10회, Time 60초간, delay 0의 설정으로 부하를 줌
 foo@bar:~$ siege --concurrent=100 --reps=10 --time=60S -b http://localhost:8086/kube/pod
  
-@ Try 1
 # Lifting the server siege...
   Transactions:		       32676 hits
   Availability:		      100.00 %
@@ -88,26 +91,12 @@ foo@bar:~$ siege --concurrent=100 --reps=10 --time=60S -b http://localhost:8086/
   Failed transactions:	           0
   Longest transaction:	       20.63
   Shortest transaction:	        0.00 
+ ```
  
-@ Try 2 
-# Lifting the server siege...
-  Transactions:		       32729 hits
-  Availability:		       99.70 %
-  Elapsed time:		       59.92 secs
-  Data transferred:	      438.10 MB
-  Response time:		        0.06 secs
-  Transaction rate:	      546.21 trans/sec
-  Throughput:		        7.31 MB/sec
-  Concurrency:		       34.86
-  Successful transactions:       32729
-  Failed transactions:	         100
-  Longest transaction:	        0.79
-  Shortest transaction:	        0.01  
- 
-# http://localhost:8086/kube/podWithoutCache // user 100, REPS 10, Time 60s, delay 0 
+ ```bash
+# http://localhost:8086/kube/podWithoutCache (Without Cache) // user 100명, REPS 10회, Time 60초간, delay 0의 설정으로 부하를 줌
 foo@bar:~$ siege --concurrent=100 --reps=10 --time=60S http://localhost:8086/kube/podWithoutCache
 
-@ Try 1
 # Lifting the server siege... 
   Transactions:		       10388 hits
   Availability:		      100.00 %
@@ -121,20 +110,26 @@ foo@bar:~$ siege --concurrent=100 --reps=10 --time=60S http://localhost:8086/kub
   Failed transactions:	           0
   Longest transaction:	        1.81
   Shortest transaction:	        0.04
-  
-@ Try 2  
-# Lifting the server siege...
-  Transactions:		       10575 hits
-  Availability:		      100.00 %
-  Elapsed time:		       59.35 secs
-  Data transferred:	      144.38 MB
-  Response time:		        0.55 secs
-  Transaction rate:	      178.18 trans/sec
-  Throughput:		        2.43 MB/sec
-  Concurrency:		       97.18
-  Successful transactions:       10575
-  Failed transactions:	           0
-  Longest transaction:	        1.91
-  Shortest transaction:	        0.03
-
 ```
+
+
+### Result
+
+```bash
+ # 캐시가 없는 경우                                 # 캐시가 있는 경우               
+  Transactions:		       10388 hits            Transactions:          32676 hits     
+  Availability:		      100.00 %               Availability:         100.00 %
+  Elapsed time:		       59.89 secs            Elapsed time:          59.92 secs 
+  Data transferred:	      139.05 MB              Data transferred:       437.39 MB
+  Response time:		        0.57 secs        Response time:            0.17 secs
+  Transaction rate:	      173.45 trans/sec       Transaction rate:       545.33 trans/sec      
+  Throughput:		        2.32 MB/sec          Throughput:           7.30 MB/sec
+  Concurrency:		       98.28                 Concurrency:           92.55
+  Successful transactions:       10388           Successful transactions:       32676
+  Failed transactions:	           0             Failed transactions:             0
+  Longest transaction:	        1.81             Longest transaction:         20.63
+  Shortest transaction:	        0.04             Shortest transaction:         0.00 
+```
+*** 
+#### 결과
+위의 결과로 보아서 대략 캐시 된 곳은 32676번, 안 된 곳은 10388번의 호출이 왔고, 각각 응답시간이 0.17초 / 0.57초로 약 3배정도 빠르다.
