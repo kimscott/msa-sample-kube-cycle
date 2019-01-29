@@ -76,7 +76,7 @@ LoadBalancer로 서비스 타입 변경
 
 ```console
 # http://localhost:8086/kube/pod로 (Cached) user 100명, REPS 10회, Time 60초간, delay 0의 설정으로 부하를 줌
-foo@bar:~$ siege --concurrent=100 --reps=10 --time=60S -b http://localhost:8086/kube/pod
+$ siege --concurrent=100 --reps=10 --time=60S -b http://localhost:8086/kube/pod
  
 # Lifting the server siege...
   Transactions:		       32676 hits
@@ -95,7 +95,7 @@ foo@bar:~$ siege --concurrent=100 --reps=10 --time=60S -b http://localhost:8086/
  
  ```console
 # http://localhost:8086/kube/podWithoutCache (Without Cache) 로 user 100명, REPS 10회, Time 60초간, delay 0의 설정으로 부하를 줌
-foo@bar:~$ siege --concurrent=100 --reps=10 --time=60S http://localhost:8086/kube/podWithoutCache
+$ siege --concurrent=100 --reps=10 --time=60S http://localhost:8086/kube/podWithoutCache
 
 # Lifting the server siege... 
   Transactions:		       10388 hits
@@ -115,20 +115,20 @@ foo@bar:~$ siege --concurrent=100 --reps=10 --time=60S http://localhost:8086/kub
 
 ### Result
 
-```bash
+```console
  # 캐시가 없는 경우                                 # 캐시가 있는 경우               
-  Transactions:		       10388 hits            Transactions:          32676 hits     
-  Availability:		      100.00 %               Availability:         100.00 %
-  Elapsed time:		       59.89 secs            Elapsed time:          59.92 secs 
-  Data transferred:	      139.05 MB              Data transferred:       437.39 MB
-  Response time:		        0.57 secs        Response time:            0.17 secs
-  Transaction rate:	      173.45 trans/sec       Transaction rate:       545.33 trans/sec      
-  Throughput:		        2.32 MB/sec          Throughput:           7.30 MB/sec
-  Concurrency:		       98.28                 Concurrency:           92.55
-  Successful transactions:       10388           Successful transactions:       32676
-  Failed transactions:	           0             Failed transactions:             0
-  Longest transaction:	        1.81             Longest transaction:         20.63
-  Shortest transaction:	        0.04             Shortest transaction:         0.00 
+  Transactions:		       10388 hits            Transactions:                32676 hits     
+  Availability:		      100.00 %               Availability:               100.00 %
+  Elapsed time:		       59.89 secs            Elapsed time:                59.92 secs 
+  Data transferred:	      139.05 MB              Data transferred:           437.39 MB
+  Response time:		0.57 secs            Response time:                0.17 secs
+  Transaction rate:	      173.45 trans/sec       Transaction rate:           545.33 trans/sec      
+  Throughput:		        2.32 MB/sec          Throughput:		   7.30 MB/sec
+  Concurrency:		       98.28                 Concurrency:                  92.55
+  Successful transactions:       10388               Successful transactions:      32676
+  Failed transactions:	           0                 Failed transactions:             0
+  Longest transaction:	        1.81                 Longest transaction:          20.63
+  Shortest transaction:	        0.04                 Shortest transaction:         0.00 
 ```
 *** 
 #### 결과
