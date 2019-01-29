@@ -74,7 +74,7 @@ LoadBalancer로 서비스 타입 변경
 ##### 같은 부하를 Cache가 있는 곳과 Cache가 없는 곳에 걸어서 비교를 해본다.
 설정값 : user 100명, REPS 10회, Time 60초간, delay 0
 
-```bash
+```console
 # http://localhost:8086/kube/pod로 (Cached) user 100명, REPS 10회, Time 60초간, delay 0의 설정으로 부하를 줌
 foo@bar:~$ siege --concurrent=100 --reps=10 --time=60S -b http://localhost:8086/kube/pod
  
@@ -93,7 +93,7 @@ foo@bar:~$ siege --concurrent=100 --reps=10 --time=60S -b http://localhost:8086/
   Shortest transaction:	        0.00 
  ```
  
- ```bash
+ ```console
 # http://localhost:8086/kube/podWithoutCache (Without Cache) 로 user 100명, REPS 10회, Time 60초간, delay 0의 설정으로 부하를 줌
 foo@bar:~$ siege --concurrent=100 --reps=10 --time=60S http://localhost:8086/kube/podWithoutCache
 
