@@ -3,6 +3,7 @@ server:
 
 topic:
   kubepod : kubepod
+  instanceTopic : instanceTopic
 
 producerReplicas : ${PRODUCER_REPLICAS:#{1} }
 producerId : ${PRODUCER_ID:#{0}}

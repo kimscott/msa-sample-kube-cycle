@@ -83,6 +83,9 @@
                         .then((result) => {
                             me.list = [];
                             me.list = result.data;
+                            me.list.sort(function(a, b) {
+                                return a.kubePodId.name < b.kubePodId.name ? -1 : a.kubePodId.name > b.kubePodId.name ? 1 : 0;
+                            });
                         });
                     if (this.evtSource != null) {
                         this.evtSource.close();
@@ -99,6 +102,9 @@
                                     }
                                 })
                             }
+                            me.list.sort(function(a, b) {
+                                return a.kubePodId.name < b.kubePodId.name ? -1 : a.kubePodId.name > b.kubePodId.name ? 1 : 0;
+                            });
                         });
                     if (this.evtSource != null) {
                         this.evtSource.close();
@@ -180,10 +186,16 @@
                             if (!(parseMessage.statusType == 'DELETED')) {
                                 me.list.push(parseMessage)
                                 listNameListTmp.push(parseMessage.kubePodId.name)
+
+                                me.list.sort(function(a, b) {
+                                    return a.kubePodId.name < b.kubePodId.name ? -1 : a.kubePodId.name > b.kubePodId.name ? 1 : 0;
+                                });
+
                                 return;
                             }
                         }
                     })
+
                 }
                 me.evtSource.onerror = function (e) {
                     if (me.evtSource) {

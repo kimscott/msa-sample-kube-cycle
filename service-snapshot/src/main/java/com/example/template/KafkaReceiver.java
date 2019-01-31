@@ -1,6 +1,9 @@
 package com.example.template;
 
+import com.example.template.model.InstanceModel;
+import com.example.template.model.InstanceState;
 import com.example.template.model.KubePod;
+import com.example.template.service.InstanceService;
 import com.example.template.service.KubePodService;
 import com.google.gson.Gson;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -21,16 +24,8 @@ public class KafkaReceiver {
     @Autowired
     KubePodService kubePodService;
 
-    /**
-     * 특정 파티션을 받겠다고 선언을 안해 놓으면, consumer 수가 늘어날수록, 알아서 partition을 분배하여 간다.
-     * @param message
-     * @param consumerRecord
-     */
-//    @KafkaListener(topics = "${topic.kubepod}")
-//    public void listenWithOutPartition(@Payload String message, ConsumerRecord<?, ?> consumerRecord) {
-////        doDelay();
-//        LOG.info("listenWithPartition record='{}' message='{}' partition='{}'", consumerRecord.offset() , message, consumerRecord.partition());
-//    }
+    @Autowired
+    InstanceService instanceService;
 
     /**
      * 특정 클래스로 받으려면 아래와 같이 객체로 변환을 하면 된다.
@@ -38,8 +33,25 @@ public class KafkaReceiver {
      * @param message
      * @param consumerRecord
      */
-    @KafkaListener(topics = "${topic.kubepod}")
+
+    @KafkaListener(topics = "${topic.instanceTopic}")
     public void listenByObject(@Payload String message, ConsumerRecord<?, ?> consumerRecord) {
+
+        InstanceModel im = new Gson().fromJson(message, InstanceModel.class);
+        System.out.println(im.toString());
+        if( InstanceState.DELETE.equals(im.getInstanceState())){
+            instanceService.deleteInstance(im);
+            instanceService.updateCache();
+        }else if( InstanceState.MODIFY.equals(im.getInstanceState())){
+            instanceService.updateCache();
+        }else{
+            instanceService.saveInstanceStatus(im);
+        }
+    }
+
+//    old version
+    @KafkaListener(topics = "${topic.kubepod}")
+    public void listenByObject2(@Payload String message, ConsumerRecord<?, ?> consumerRecord) {
         System.out.println(message);
         KubePod kubePod = new Gson().fromJson(message, KubePod.class);
 
@@ -49,6 +61,4 @@ public class KafkaReceiver {
             kubePodService.savePodStatus(kubePod);
         }
     }
-
-
 }

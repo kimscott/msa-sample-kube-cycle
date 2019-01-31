@@ -1,6 +1,7 @@
 package com.example.template;
 
 import com.google.common.reflect.TypeToken;
+import com.google.gson.JsonObject;
 import io.kubernetes.client.ApiClient;
 import io.kubernetes.client.ApiException;
 import io.kubernetes.client.Configuration;
@@ -10,6 +11,7 @@ import io.kubernetes.client.util.Config;
 import io.kubernetes.client.util.Watch;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.joda.time.DateTime;
+import org.json.simple.JSONObject;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,8 +22,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -33,6 +38,9 @@ public class KubeInstanceTask implements InitializingBean {
 
     @Value("${topic.kubepod}")
     private String kubepod;
+
+    @Value("${topic.instanceTopic}")
+    private String instanceTopic;
 
     @Value("${producerReplicas}")
     private String producerReplicas;
@@ -82,6 +90,54 @@ public class KubeInstanceTask implements InitializingBean {
 
         try {
             for (Watch.Response<V1Pod> item : watch) {
+                Date createDate =  item.object.getStatus().getStartTime() != null ? item.object.getStatus().getStartTime().toDate() : null;
+                String dateStr = "";
+                if( createDate != null ){
+                    SimpleDateFormat transFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    dateStr = transFormat.format(createDate);
+                }
+                InstanceModel im = new InstanceModel();
+                im.setId(item.object.getMetadata().getName());
+                im.setProvider("K8S");
+                im.setName(item.object.getMetadata().getNamespace());
+                im.setStatus(item.object.getStatus().getPhase());
+                im.setType(item.object.getKind());
+                im.setCreateDate(dateStr);
+
+                JSONObject properties = new JSONObject();
+                properties.put("apiVersion", item.object.getApiVersion());
+                properties.put("image", item.object.getSpec().getContainers() != null ? item.object.getSpec().getContainers().get(0).getImage() : "");
+
+                im.setProperties(properties.toJSONString());
+
+                if(item.type.equals("DELETED")){
+                    im.setInstanceState(InstanceState.DELETE);
+                }else if(item.type.equals("MODIFIED")) {
+                    im.setInstanceState(InstanceState.MODIFY);
+                }
+//                System.out.println("Message: " + item.type + " sent to topic: " + item.object.getMetadata().getName());
+                kafkaTemplate.send(new ProducerRecord<String, InstanceModel>(instanceTopic, item.object.getMetadata().getNamespace() , im));
+
+                System.out.printf("%s : %s %n" , item.type, im.toString() );
+            }
+        } finally {
+            watch.close();
+        }
+    }
+
+    /* old version
+    @Scheduled(fixedRate = 10000)
+    public void watchPod() throws IOException, ApiException{
+        CoreV1Api api = new CoreV1Api();
+        Watch<V1Pod> watch =
+                Watch.createWatch(
+                        client,
+                        api.listPodForAllNamespacesCall(
+                                null, null, null, null, null, null, null, null, Boolean.TRUE, null, null),
+                        new TypeToken<Watch.Response<V1Pod>>() {}.getType());
+
+        try {
+            for (Watch.Response<V1Pod> item : watch) {
 //                System.out.printf("%s : %s , %s %n" , item.object.getMetadata().getName(), item.type, item.object.getStatus().getPhase() );
 
                 KubePod kp = new KubePod();
@@ -112,6 +168,7 @@ public class KubeInstanceTask implements InitializingBean {
             watch.close();
         }
     }
+    */
 
 //    @Scheduled(fixedRate = 10000)
     public void watchService() throws IOException, ApiException{

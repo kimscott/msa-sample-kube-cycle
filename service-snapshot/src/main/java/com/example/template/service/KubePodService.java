@@ -1,5 +1,7 @@
 package com.example.template.service;
 
+import com.example.template.model.InstanceModel;
+import com.example.template.model.InstanceModelRepository;
 import com.example.template.model.KubePod;
 import com.example.template.model.KubePodRepository;
 import org.slf4j.Logger;
