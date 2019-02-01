@@ -10,11 +10,11 @@ var backend;
 
 
 export default new Router({
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: Home
-    },
-  ]
+    routes: [
+        {
+            path: '/',
+            name: 'User one',
+            component: Home,
+        }
+    ]
 })

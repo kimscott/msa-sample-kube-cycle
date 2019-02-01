@@ -1,6 +1,9 @@
 <template>
     <div class="home">
-        <DashBoard/>
+        <el-button @click="user={provider: 'EC2' , name: '1'}">User 1</el-button>
+        <el-button @click="user={provider: 'K8S' , name: 'default'}">User 2</el-button>
+        <el-button @click="user={provider: 'EC2, K8S' , name: 'default, 1'}">User 3</el-button>
+        <DashBoard :user="user"/>
     </div>
 </template>
 
@@ -10,6 +13,11 @@
 
     export default {
         name: 'home',
+        data() {
+            return {
+                user: {provider: 'EC2', name:'1'}
+            }
+        },
         components: {
             DashBoard
         }
