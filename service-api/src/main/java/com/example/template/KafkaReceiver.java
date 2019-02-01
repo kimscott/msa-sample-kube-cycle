@@ -1,11 +1,7 @@
 package com.example.template;
 
 import com.example.template.model.InstanceModel;
-import com.example.template.model.InstanceState;
-import com.example.template.model.KubePod;
-import com.example.template.model.KubePodId;
 import com.example.template.service.InstanceService;
-import com.example.template.service.KubePodService;
 import com.google.gson.Gson;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
@@ -22,8 +18,6 @@ public class KafkaReceiver {
 
     private static final Logger LOG = LoggerFactory.getLogger(KafkaReceiver.class);
 
-    @Autowired
-    KubePodService kubePodService;
     @Autowired
     InstanceService instanceService;
 
@@ -48,13 +42,4 @@ public class KafkaReceiver {
         messageHandler.publish(im.getProvider(), message);
     }
 
-    @KafkaListener(topics = "${topic.kubepod}")
-    public void listenByObject2(@Payload String message, ConsumerRecord<?, ?> consumerRecord) {
-        System.out.println(message);
-        Gson gson = new Gson();
-        KubePod kubePod = gson.fromJson(message, KubePod.class);
-        kubePodService.update(kubePod);
-        kubePodService.deleteCacheList(kubePod);
-        messageHandler.publish(kubePod.getKubePodId().getNamespace(), gson.toJson(kubePod));
-    }
 }

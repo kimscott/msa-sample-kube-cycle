@@ -3,7 +3,6 @@ server:
 
 
 topic:
-  kubepod : kubepod
   instanceTopic : instanceTopic
 
 ---

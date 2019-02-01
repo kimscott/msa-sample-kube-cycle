@@ -6,10 +6,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
-import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
-import com.amazonaws.services.ec2.model.DescribeInstancesResult;
-import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ec2.model.Reservation;
+import com.amazonaws.services.ec2.model.*;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.InitializingBean;
@@ -23,10 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 @Service
 @EnableScheduling
@@ -34,9 +28,6 @@ public class AwsInstanceTask implements InitializingBean {
 
     @Autowired
     Environment environment;
-
-    @Value("${topic.kubepod}")
-    private String kubepod;
 
     @Value("${topic.instanceTopic}")
     private String instanceTopic;
@@ -106,7 +97,14 @@ public class AwsInstanceTask implements InitializingBean {
                         this.preState.put(instanceId, state);
                         String name = "";
                         try{
-                            name = instance.getTags() != null ? instance.getTags().get(0).getValue() : "";
+                            if( instance.getTags() != null ){
+                                List<Tag> tagList = instance.getTags();
+                                for(Tag tag : tagList){
+                                    if( tag.getKey().toLowerCase().equals("name")){
+                                        name = tag.getValue();
+                                    }
+                                }
+                            }
                         }catch (Exception e){}
                         Date createDate =  instance.getLaunchTime();
                         SimpleDateFormat transFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");

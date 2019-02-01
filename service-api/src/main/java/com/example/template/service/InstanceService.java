@@ -2,7 +2,6 @@ package com.example.template.service;
 
 import com.example.template.model.InstanceModel;
 import com.example.template.model.InstanceModelRepository;
-import com.example.template.model.KubePod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +34,12 @@ public class InstanceService {
     public Iterable<InstanceModel> getAllInstanceByProvider(String provider){
         LOG.info("use getAllInstanceByProvider database");
         return instanceModelRepository.findByProvider(provider);
+    }
+
+    @Cacheable(value="instance", key="#provider+#name")
+    public Iterable<InstanceModel> getInstanceByProviderAndName(String provider, String name){
+        LOG.info("use getAllInstanceByProvider database");
+        return instanceModelRepository.findByProviderAndName(provider,name);
     }
 
 

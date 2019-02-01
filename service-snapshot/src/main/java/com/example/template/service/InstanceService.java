@@ -37,8 +37,9 @@ public class InstanceService {
             @CacheEvict(value = "instance"),
             @CacheEvict(value = "instance", key="#instance.id"),
             @CacheEvict(value = "instance", key ="#instance.provider"),
+            @CacheEvict(value = "instance", key ="#instance.provider+#instance.name")
     })
-    public void updateCache(){
+    public void updateCache(InstanceModel instance){
 
     }
 
