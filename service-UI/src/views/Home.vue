@@ -1,9 +1,9 @@
 <template>
     <div class="home">
         <el-button @click="user=null">Master</el-button>
-        <el-button @click="user={provider: 'EC2' , name: '1'}">User 1</el-button>
-        <el-button @click="user={provider: 'K8S' , name: 'default'}">User 2</el-button>
-        <el-button @click="user={provider: 'EC2, K8S' , name: 'default, 1'}">User 3</el-button>
+        <el-button @click="user=[{provider: 'EC2' , name: 'nodes.jjy.k8s.local'}]">User 1</el-button>
+        <el-button @click="user=[{provider: 'K8S' , name: 'default'}]">User 2</el-button>
+        <el-button @click="user=[{provider: 'K8S' , name: 'default'}, {provider: 'EC2' , name: 'nodes.jjy.k8s.local'}]">User 3</el-button>
         <DashBoard :user="user"/>
     </div>
 </template>
@@ -16,7 +16,7 @@
         name: 'home',
         data() {
             return {
-                user: {provider: 'EC2', name:'1'}
+                user: [{provider: 'EC2', name:'1'}]
             }
         },
         components: {

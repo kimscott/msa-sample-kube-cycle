@@ -116,7 +116,7 @@
 
         name: 'DashBoard',
         props: {
-            user: Object,
+            user: Array,
         },
         components: {
             'vuetable': VueTable,
@@ -125,7 +125,7 @@
         data() {
             return {
                 evtSource: null,
-                nameSpaceList: [{id: 0, name: 'All'}],
+                // nameSpaceList: [{id: 0, name: 'All'}],
                 selectedNamespace: {},
                 list: [],
                 providerFilters: []
@@ -153,14 +153,15 @@
         watch: {
             user: function (newVal) {
                 var me = this;
-                if(newVal == null) {
+                var resultArray = [];
+                if (newVal == null) {
                     var provider = 'All'
                 } else {
                     var name = newVal.name;
                     var provider = newVal.provider
                 }
                 if (provider == 'All') {
-                    this.$http.get(`${API_HOST}/kube/instance/`)
+                    me.$http.get(`${API_HOST}/kube/instance/`)
                         .then((result) => {
                             me.list = [];
                             me.list = result.data;
@@ -168,29 +169,39 @@
                                 return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
                             });
                         });
-                    if (this.evtSource != null) {
-                        this.evtSource.close();
+                    if (me.evtSource != null) {
+                        me.evtSource.close();
                         me.startSSE();
                     }
                 } else {
-                    this.$http.get(`${API_HOST}/kube/instance/` + provider)
-                        .then((result) => {
-                            me.list = [];
-                            if (me.list.length == 0) {
-                                result.data.forEach(function (data) {
-                                    if (!(data.instanceState == 'DELETED')) {
-                                        me.list.push(data)
+                    newVal.forEach(function (newValData) {
+                        return new Promise(function (resolve, reject) {
+                            var responseList = [];
+                            me.$http.get(`${API_HOST}/kube/instance/` + newValData.provider + '/' + newValData.name)
+                                .then((result) => {
+                                    me.list = [];
+                                    if (me.list.length == 0) {
+                                        result.data.forEach(function (data) {
+                                            if (!(newValData.statusType == 'DELETED')) {
+                                                resultArray.push(data)
+                                            }
+                                        })
                                     }
+                                    resolve(resultArray)
+                                });
+                        }).then(
+                            function (list) {
+                                list.sort(function (a, b) {
+                                    return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
                                 })
+                                me.list = list
                             }
-                            me.list.sort(function (a, b) {
-                                return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
-                            });
-                        });
-                    if (this.evtSource != null) {
-                        this.evtSource.close();
-                        me.startSSE(name);
-                    }
+                        );
+                        if (me.evtSource != null) {
+                            me.evtSource.close();
+                            me.startSSE(name);
+                        }
+                    })
                 }
             },
         },
@@ -232,11 +243,11 @@
                     var parseMessage = JSON.parse(parse.message);
                     var listNameListTmp = [];
                     me.list.forEach(function (name) {
-                        listNameListTmp.push(name.kubePodId.name)
+                        listNameListTmp.push(name.id)
                     });
 
                     me.list.some(function (listTmp, index) {
-                        if (listTmp.name == parseMessage.name) {
+                        if (listTmp.id == parseMessage.id) {
                             // console.log(me.list[index] + ':' + parseMessage);
                             if (parseMessage.statusType == 'DELETED') {
                                 me.list = [
@@ -253,13 +264,13 @@
                             me.list.sort(function (a, b) {
                                 return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
                             });
-                        } else if (!listNameListTmp.includes(parseMessage.kubePodId.name)) {
+                        } else if (!listNameListTmp.includes(parseMessage.id)) {
                             if (!(parseMessage.statusType == 'DELETED')) {
                                 me.list.push(parseMessage)
-                                listNameListTmp.push(parseMessage.kubePodId.name)
+                                listNameListTmp.push(parseMessage.id)
 
                                 me.list.sort(function (a, b) {
-                                    return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+                                    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
                                 });
 
                                 return;
