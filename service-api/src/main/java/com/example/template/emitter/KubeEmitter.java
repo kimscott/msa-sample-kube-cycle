@@ -4,18 +4,28 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 public class KubeEmitter extends SseEmitter {
 
-    private String nameSpace;
+    private String name;
+    private String provider;
 
-    public KubeEmitter(String nameSpace) {
+    public KubeEmitter(String name, String provider) {
         super();
-        this.nameSpace = nameSpace;
+        this.name = name;
+        this.provider = provider;
     }
 
-    public String getNameSpace() {
-        return nameSpace;
+    public String getName() {
+        return name;
     }
 
-    public void setNameSpace(String nameSpace) {
-        this.nameSpace = nameSpace;
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
     }
 }

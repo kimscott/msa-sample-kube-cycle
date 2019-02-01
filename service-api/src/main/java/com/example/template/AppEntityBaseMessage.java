@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class AppEntityBaseMessage {
-//    String id;
-    String namespace;
+    String provider;
+    String name;
     String message;
 }

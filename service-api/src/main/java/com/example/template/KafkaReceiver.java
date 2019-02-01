@@ -39,7 +39,7 @@ public class KafkaReceiver {
         InstanceModel im = gson.fromJson(message, InstanceModel.class);
         instanceService.update(im);
         instanceService.deleteCacheList(im);
-        messageHandler.publish(im.getProvider(), message);
+        messageHandler.publish(im.getName(), im.getProvider(), message);
     }
 
 }

@@ -151,10 +151,15 @@
         },
 
         watch: {
-            selectedNamespace: function (newVal) {
+            user: function (newVal) {
                 var me = this;
-                var name = newVal.name;
-                if (name == 'All') {
+                if(newVal == null) {
+                    var provider = 'All'
+                } else {
+                    var name = newVal.name;
+                    var provider = newVal.provider
+                }
+                if (provider == 'All') {
                     this.$http.get(`${API_HOST}/kube/instance/`)
                         .then((result) => {
                             me.list = [];
@@ -168,7 +173,7 @@
                         me.startSSE();
                     }
                 } else {
-                    this.$http.get(`${API_HOST}/kube/instance/` + name)
+                    this.$http.get(`${API_HOST}/kube/instance/` + provider)
                         .then((result) => {
                             me.list = [];
                             if (me.list.length == 0) {
@@ -213,13 +218,13 @@
 
                 });
             },
-            startSSE: function (name) {
+            startSSE: function (user) {
                 var me = this;
                 // this.getNameSpace();
-                if (name == null) {
+                if (user == null) {
                     me.evtSource = new EventSource(`${API_HOST}/kubesse/`)
                 } else {
-                    this.evtSource = new EventSource(`${API_HOST}/kubesse/?nameSpace=` + name)
+                    this.evtSource = new EventSource(`${API_HOST}/kubesse/?provider=` + user.provider + '?name=' + user.name)
                 }
                 var tmp = [];
                 me.evtSource.onmessage = function (e) {
@@ -269,8 +274,8 @@
                         console.log("closing evtSource and reconnect");
                         me.evtSource.close();
                         setTimeout(function () {
-                            if (me.selectedNamespace.name != null) {
-                                me.startSSE(me.selectedNamespace.name);
+                            if (me.user != null) {
+                                me.startSSE(user);
                             } else {
                                 me.startSSE();
                             }

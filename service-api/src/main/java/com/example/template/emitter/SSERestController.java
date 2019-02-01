@@ -12,12 +12,11 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-@CrossOrigin("*")
 @Controller
+//@CrossOrigin(origins = "*")
 @RequestMapping("/kubesse")
 public class SSERestController {
 
@@ -26,12 +25,14 @@ public class SSERestController {
     private final CopyOnWriteArrayList<KubeEmitter> userBaseEmitters = new CopyOnWriteArrayList<>();
     public String nameSpace = null;
 
+    @CrossOrigin(origins = "*")
     @GetMapping("/")
     public SseEmitter getNewKube(HttpServletRequest request,
                                  HttpServletResponse response,
-                                 @RequestParam(value = "nameSpace", required = false) String nameSpace
+                                 @RequestParam(value = "provider", required = false) String provider,
+                                 @RequestParam(value = "name", required = false) String name
     ) {
-        KubeEmitter emitter = new KubeEmitter(nameSpace);
+        KubeEmitter emitter = new KubeEmitter(name, provider);
         userBaseEmitters.add(emitter);
         System.out.println("before: " + this.userBaseEmitters.size());
 //        this.nameSpace = nameSpace;
@@ -48,24 +49,25 @@ public class SSERestController {
     public void onKubeSse(AppEntityBaseMessage appEntityBaseMessage) {
         LOGGER.info("appEntityBaseMessage");
         System.out.println(this.userBaseEmitters.size());
-//        List<SseEmitter> deadEmitters = new ArrayList<>();
+        List<SseEmitter> deadEmitters = new ArrayList<>();
         this.userBaseEmitters.forEach(emitter -> {
             try {
                 /*
                     todo : nameSpace 조건 부분
                  */
                 LOGGER.info("appEntityBaseMessage");
-                if(emitter.getNameSpace() == null) {
+                if(emitter.getName() == null) {
                     emitter.send(appEntityBaseMessage);
-                } else if(appEntityBaseMessage.getNamespace().equals(emitter.getNameSpace())) {
+                } else if(appEntityBaseMessage.getName().equals(emitter.getName()) && appEntityBaseMessage.getProvider().equals(emitter.getProvider())) {
                     emitter.send(appEntityBaseMessage);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
                 LOGGER.info("dead");
+                deadEmitters.add(emitter);
                 this.userBaseEmitters.remove(emitter);
             }
         });
-//        this.userBaseEmitters.remove(deadEmitters);
+        this.userBaseEmitters.remove(deadEmitters);
     }
 }
