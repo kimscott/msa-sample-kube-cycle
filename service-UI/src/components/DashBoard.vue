@@ -1,21 +1,91 @@
 <template>
-    <div class="DashBoard" style="margin: 10px">
-        <h1> List </h1>
+    <div class="DashBoard" style="text-align:center; margin: 10px">
+        <!--<h1> List </h1>-->
         <div>
-            <dropdown :options="nameSpaceList"
-                      :selected="selectedNamespace"
-                      v-on:updateOption="methodToRunOnSelect"
-                      :placeholder="'Select an Namespace'"
-            >
-            </dropdown>
+            <!--<dropdown :options="nameSpaceList"-->
+            <!--:selected="selectedNamespace"-->
+            <!--v-on:updateOption="methodToRunOnSelect"-->
+            <!--:placeholder="'Select an Namespace'"-->
+            <!--&gt;-->
+            <!--</dropdown>-->
         </div>
         <div class="table">
-            <h2>Pods</h2>
-            <vuetable ref="pods"
-                      :fields="['kubePodId.namespace', 'kubePodId.name', 'statusType', 'phase', 'startTime', 'updateTime', 'endTime']"
-                      :data="list"
-            >
-            </vuetable>
+            <h2>Response</h2>
+
+            <el-table
+                    ref="filterTable"
+                    :data="list"
+                    style="width: 100%">
+                <el-table-column
+                        fixed
+                        sortable
+                        prop="provider"
+                        label="Provider"
+                        width="120"
+                        :filters="[{text: 'EC2', value: 'EC2'}, {text: 'K8S', value: 'K8S'}]"
+                        :filter-method="filterHandler"
+                >
+                    <template slot-scope="scope">
+                        <el-tag
+                                :type="scope.row.provider === 'K8S' ? 'primary' : 'warning'"
+                                disable-transitions>{{scope.row.provider}}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column
+                        fixed
+                        sortable
+                        prop="name"
+                        label="Name"
+                >
+                </el-table-column>
+                <el-table-column
+                        fixed
+                        prop="id"
+                        label="ID"
+                >
+                </el-table-column>
+                <el-table-column
+                        prop="type"
+                        label="Type"
+                        width="100">
+                </el-table-column>
+                <el-table-column
+                        prop="status"
+                        label="Status"
+                        width="100"
+                >
+                </el-table-column>
+                <el-table-column
+                        prop="instanceState"
+                        label="Instance State"
+                        width="120"
+                >
+                </el-table-column>
+                <el-table-column
+                        prop="createDate"
+                        label="Create Date"
+                        column-key="date"
+                        width="100"
+                />
+                <el-table-column
+                        prop="regDate"
+                        label="Reg Date"
+                        column-key="date"
+                        width="100"
+                />
+                <el-table-column
+                        prop="properties"
+                        label="Properties"
+                >
+                </el-table-column>
+
+            </el-table>
+            <!--<vuetable ref="pods"-->
+            <!--:fields="['kubePodId.namespace', 'kubePodId.name', 'statusType', 'phase', 'startTime', 'updateTime', 'endTime']"-->
+            <!--:data="list"-->
+            <!--&gt;-->
+            <!--</vuetable>-->
         </div>
         <!--<div class="table">-->
         <!--<h2>Services</h2>-->
@@ -46,7 +116,7 @@
 
         name: 'DashBoard',
         props: {
-            msg: String,
+            user: Object,
         },
         components: {
             'vuetable': VueTable,
@@ -58,7 +128,7 @@
                 nameSpaceList: [{id: 0, name: 'All'}],
                 selectedNamespace: {},
                 list: [],
-                list2: []
+                providerFilters: []
             }
         },
 
@@ -69,9 +139,15 @@
             }
         },
         mounted() {
-            var me = this
+            var me = this;
             this.startSSE();
-            this.getNameSpace();
+            this.getNameSpace().then(function (list) {
+                /* Provider별 정렬 */
+                list.sort(function (a, b) {
+                    return a.provider < b.provider ? -1 : a.provider > b.provider ? 1 : 0;
+                });
+                me.list = list
+            });
         },
 
         watch: {
@@ -79,12 +155,12 @@
                 var me = this;
                 var name = newVal.name;
                 if (name == 'All') {
-                    this.$http.get(`${API_HOST}/kube/pod/`)
+                    this.$http.get(`${API_HOST}/kube/instance/`)
                         .then((result) => {
                             me.list = [];
                             me.list = result.data;
-                            me.list.sort(function(a, b) {
-                                return a.kubePodId.name < b.kubePodId.name ? -1 : a.kubePodId.name > b.kubePodId.name ? 1 : 0;
+                            me.list.sort(function (a, b) {
+                                return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
                             });
                         });
                     if (this.evtSource != null) {
@@ -92,18 +168,18 @@
                         me.startSSE();
                     }
                 } else {
-                    this.$http.get(`${API_HOST}/kube/pod/` + name)
+                    this.$http.get(`${API_HOST}/kube/instance/` + name)
                         .then((result) => {
                             me.list = [];
                             if (me.list.length == 0) {
                                 result.data.forEach(function (data) {
-                                    if (!(data.statusType == 'DELETED')) {
+                                    if (!(data.instanceState == 'DELETED')) {
                                         me.list.push(data)
                                     }
                                 })
                             }
-                            me.list.sort(function(a, b) {
-                                return a.kubePodId.name < b.kubePodId.name ? -1 : a.kubePodId.name > b.kubePodId.name ? 1 : 0;
+                            me.list.sort(function (a, b) {
+                                return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
                             });
                         });
                     if (this.evtSource != null) {
@@ -114,40 +190,28 @@
             },
         },
         methods: {
-            methodToRunOnSelect(payload) {
-                this.selectedNamespace = payload;
+            filterHandler(value, row, column) {
+                const property = column['property'];
+                return row[property] === value;
             },
-            getNameSpace: function () {
+            getNameSpace: function (callback) {
                 var me = this;
-                this.$http.get(`${API_HOST}/kube/pod/`)
-                    .then((result) => {
-                        // console.log(result);
-                        if (me.list.length == 0) {
-                            result.data.forEach(function (data) {
-                                if (!(data.statusType == 'DELETED')) {
-                                    me.list.push(data)
-                                }
-                            })
-                        }
-                        var i = 1;
-                        var namespaceListTmp = [];
-                        if (me.nameSpaceList.length > 0) {
-                            me.nameSpaceList.forEach(function (podName) {
-                                if (!namespaceListTmp.includes(podName.name)) {
-                                    namespaceListTmp.push(podName.name)
-                                }
-                            })
-                        }
-
-                        result.data.forEach(function (pods) {
-                            if (!namespaceListTmp.includes(pods.kubePodId.namespace)) {
-                                namespaceListTmp.push(pods.kubePodId.namespace)
-                                me.nameSpaceList.push({id: i, name: pods.kubePodId.namespace});
-                                i++
+                return new Promise(function (resolve, reject) {
+                    var responseList = [];
+                    me.$http.get(`${API_HOST}/kube/instance/`)
+                        .then((result) => {
+                            console.log(result);
+                            if (me.list.length == 0) {
+                                result.data.forEach(function (data) {
+                                    if (!(data.statusType == 'DELETED')) {
+                                        responseList.push(data)
+                                    }
+                                })
                             }
+                            resolve(responseList);
                         })
-                    })
 
+                });
             },
             startSSE: function (name) {
                 var me = this;
@@ -167,9 +231,9 @@
                     });
 
                     me.list.some(function (listTmp, index) {
-                        if (listTmp.kubePodId.name == parseMessage.kubePodId.name) {
+                        if (listTmp.name == parseMessage.name) {
                             // console.log(me.list[index] + ':' + parseMessage);
-                            if(parseMessage.statusType=='DELETED') {
+                            if (parseMessage.statusType == 'DELETED') {
                                 me.list = [
                                     ...me.list.slice(0, index),
                                     ...me.list.slice(index + 1)
@@ -181,14 +245,16 @@
                                     ...me.list.slice(index + 1)
                                 ]
                             }
-                            return;
+                            me.list.sort(function (a, b) {
+                                return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+                            });
                         } else if (!listNameListTmp.includes(parseMessage.kubePodId.name)) {
                             if (!(parseMessage.statusType == 'DELETED')) {
                                 me.list.push(parseMessage)
                                 listNameListTmp.push(parseMessage.kubePodId.name)
 
-                                me.list.sort(function(a, b) {
-                                    return a.kubePodId.name < b.kubePodId.name ? -1 : a.kubePodId.name > b.kubePodId.name ? 1 : 0;
+                                me.list.sort(function (a, b) {
+                                    return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
                                 });
 
                                 return;
@@ -197,16 +263,18 @@
                     })
 
                 }
+
                 me.evtSource.onerror = function (e) {
                     if (me.evtSource) {
                         console.log("closing evtSource and reconnect");
                         me.evtSource.close();
-                        setTimeout(function(){
+                        setTimeout(function () {
                             if (me.selectedNamespace.name != null) {
-                            me.startSSE(me.selectedNamespace.name);
-                        } else {
-                            me.startSSE();
-                        }},3000)
+                                me.startSSE(me.selectedNamespace.name);
+                            } else {
+                                me.startSSE();
+                            }
+                        }, 3000)
 
                     }
                 }
