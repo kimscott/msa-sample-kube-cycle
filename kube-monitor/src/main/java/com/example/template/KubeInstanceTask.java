@@ -104,6 +104,7 @@ public class KubeInstanceTask implements InitializingBean {
                 JSONObject properties = new JSONObject();
                 properties.put("apiVersion", item.object.getApiVersion());
                 properties.put("image", item.object.getSpec().getContainers() != null ? item.object.getSpec().getContainers().get(0).getImage() : "");
+                // TODO set all info
 
                 im.setProperties(properties.toJSONString());
 

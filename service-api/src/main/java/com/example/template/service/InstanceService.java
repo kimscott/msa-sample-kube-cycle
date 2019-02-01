@@ -50,7 +50,7 @@ public class InstanceService {
             @CachePut(value = "instance", key="#instance.id")
     })
     public String update(InstanceModel instance) {
-        LOG.info("cache update .. {}", instance.toString());
+//        LOG.info("cache update .. {}", instance.toString());
         return "";
     }
 
@@ -59,10 +59,12 @@ public class InstanceService {
      */
     @Caching(evict = {
             @CacheEvict(value = "instance"),
+            @CacheEvict(value = "instance", key="#instance.id"),
             @CacheEvict(value = "instance", key ="#instance.provider"),
+            @CacheEvict(value = "instance", key ="#instance.provider+#instance.name")
     })
     public String deleteCacheList(InstanceModel instance) {
-        LOG.info("cache delete .. {}", instance.toString());
+//        LOG.info("cache delete .. {}", instance.toString());
         return "";
     }
 

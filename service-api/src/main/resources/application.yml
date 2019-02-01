@@ -19,11 +19,11 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL5Dialect
+        dialect: org.hibernate.dialect.MySQL57Dialect
         show_sql: true
 
   datasource:
-    url: jdbc:mysql://db.pas-mini.io:10002/uengine
+    url: jdbc:mysql://uengine.cxp0klyrcjfk.ap-northeast-2.rds.amazonaws.com:3306/uengine
     username: root
     password: my-secret-pw
     # mybatis 설정시에는 driverClassName 을 넣어주어야함
@@ -62,11 +62,11 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL5Dialect
+        dialect: org.hibernate.dialect.MySQL57Dialect
         show_sql: true
 
   datasource:
-    url: jdbc:mysql://db.pas-mini.io:10002/uengine
+    url: jdbc:mysql://uengine.cxp0klyrcjfk.ap-northeast-2.rds.amazonaws.com:3306/uengine
     username: root
     password: my-secret-pw
     # mybatis 설정시에는 driverClassName 을 넣어주어야함
