@@ -182,7 +182,7 @@
                                     me.list = [];
                                     if (me.list.length == 0) {
                                         result.data.forEach(function (data) {
-                                            if (!(newValData.statusType == 'DELETED')) {
+                                            if (!(newValData.instanceState == 'DELETE')) {
                                                 resultArray.push(data)
                                             }
                                         })
@@ -195,12 +195,12 @@
                                     return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
                                 })
                                 me.list = list
+                                if (me.evtSource != null) {
+                                    me.evtSource.close();
+                                    me.startSSE(newValData);
+                                }
                             }
                         );
-                        if (me.evtSource != null) {
-                            me.evtSource.close();
-                            me.startSSE(name);
-                        }
                     })
                 }
             },
@@ -219,7 +219,7 @@
                             console.log(result);
                             if (me.list.length == 0) {
                                 result.data.forEach(function (data) {
-                                    if (!(data.statusType == 'DELETED')) {
+                                    if (!(data.instanceState == 'DELETE')) {
                                         responseList.push(data)
                                     }
                                 })
@@ -230,12 +230,14 @@
                 });
             },
             startSSE: function (user) {
+                // promise a.then(alert)
                 var me = this;
                 // this.getNameSpace();
                 if (user == null) {
                     me.evtSource = new EventSource(`${API_HOST}/kubesse/`)
                 } else {
-                    this.evtSource = new EventSource(`${API_HOST}/kubesse/?provider=` + user.provider + '?name=' + user.name)
+                    var jsonUser = JSON.stringify(user)
+                    this.evtSource = new EventSource(`${API_HOST}/kubesse?` + encodeURI(jsonUser))
                 }
                 var tmp = [];
                 me.evtSource.onmessage = function (e) {
@@ -249,7 +251,7 @@
                     me.list.some(function (listTmp, index) {
                         if (listTmp.id == parseMessage.id) {
                             // console.log(me.list[index] + ':' + parseMessage);
-                            if (parseMessage.statusType == 'DELETED') {
+                            if (parseMessage.instanceState == 'DELETE') {
                                 me.list = [
                                     ...me.list.slice(0, index),
                                     ...me.list.slice(index + 1)
@@ -265,7 +267,7 @@
                                 return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
                             });
                         } else if (!listNameListTmp.includes(parseMessage.id)) {
-                            if (!(parseMessage.statusType == 'DELETED')) {
+                            if (!(parseMessage.instanceState == 'DELETE')) {
                                 me.list.push(parseMessage)
                                 listNameListTmp.push(parseMessage.id)
 
