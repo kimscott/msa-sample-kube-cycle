@@ -4,14 +4,15 @@
         <el-row>
             <el-col :span="12">
                 <codemirror
-                        :options="{
+                :options="{
                 theme: 'dracula',
                 mode: 'yaml',
                 extraKeys: {'Ctrl-Space': 'autocomplete'},
                 lineNumbers: true,
                 lineWrapping: true,
+                connect: 'align',
                 }"
-                        :value="yamlText">
+                        :value="yamlText2">
                 </codemirror>
             </el-col>
 
@@ -27,10 +28,7 @@
     import TextReader from "@/components/yaml.vue";
     import yaml from 'js-yaml'
     import json2yaml from 'json2yaml'
-    import 'codemirror/mode/yaml'
-    // import VueCodeMirror from 'vue-codemirror-lite'
-
-
+    import 'codemirror/mode/yaml-frontmatter/yaml-frontmatter.js'
 
     export default {
 
@@ -63,3 +61,8 @@
         }
     }
 </script>
+<style>
+    .CodeMirror-scroll{
+        text-align: left;
+    }
+</style>
