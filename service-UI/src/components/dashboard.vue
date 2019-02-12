@@ -133,25 +133,24 @@
         },
 
         beforeDestroy: function () {
-            if (this.evtSource) {
-                console.log("closing evtSource beforeDestroy");
-                this.evtSource.close();
-            }
+            console.log("closing evtSource beforeDestroy");
+            this.evtSource.close();
         },
         mounted() {
             var me = this;
-            this.startSSE();
-            this.getNameSpace().then(function (list) {
-                /* Provider별 정렬 */
-                list.sort(function (a, b) {
-                    return a.provider < b.provider ? -1 : a.provider > b.provider ? 1 : 0;
-                });
-                me.list = list
-            });
+            this.startSSE(me.user);
+            // this.getNameSpace().then(function (list) {
+            //     /* Provider별 정렬 */
+            //     list.sort(function (a, b) {
+            //         return a.provider < b.provider ? -1 : a.provider > b.provider ? 1 : 0;
+            //     });
+            //     me.list = list
+            // });
         },
 
         watch: {
             user: function (newVal) {
+                this.evtSource.close();
                 var me = this;
                 var resultArray = [];
                 if (newVal == null) {
@@ -171,7 +170,7 @@
                         });
                     if (me.evtSource != null) {
                         me.evtSource.close();
-                        me.startSSE();
+                        me.startSSE(newVal);
                     }
                 } else {
                     newVal.forEach(function (newValData) {
@@ -230,83 +229,72 @@
                 });
             },
             startSSE: function (user) {
-
                 var me = this;
+                // me.evtSource.close();
                 if(user != null) {
                     if(user.constructor == 'Array') {
                         user.forEach(function (userData) {
                             if (userData.provider == 'K8S') {
-                                me.evtSource = new EventSource(`${API_HOST}/kubesse/?provider=` + userData.provider + '?name=' + userData.name )
+                                me.evtSource = new EventSource(`${API_HOST}/kubesse/?provider=` + userData.provider + '&name=' + userData.name )
                             }
                             var tmp = [];
                         });
                     } else {
                         if (user.provider == 'K8S') {
-                            me.evtSource = new EventSource(`${API_HOST}/kubesse/?provider=` + user.provider + '?name=' + user.name )
+                            me.evtSource = new EventSource(`${API_HOST}/kubesse/?provider=` + user.provider + '&name=' + user.name )
                         } else {
                             me.evtSource = new EventSource(`${API_HOST}/kubesse/`)
                         }
                         var tmp = [];
                     }
-                } else {
-                    me.evtSource = new EventSource(`${API_HOST}/kubesse/`)
-                }
+                    me.evtSource.onmessage = function (e) {
+                        var parse = JSON.parse(e.data);
+                        var parseMessage = JSON.parse(parse.message);
+                        var listNameListTmp = [];
+                        me.list.forEach(function (name) {
+                            listNameListTmp.push(name.id)
+                        });
 
-
-                me.evtSource.onmessage = function (e) {
-                    var parse = JSON.parse(e.data);
-                    var parseMessage = JSON.parse(parse.message);
-                    var listNameListTmp = [];
-                    me.list.forEach(function (name) {
-                        listNameListTmp.push(name.id)
-                    });
-
-                    me.list.some(function (listTmp, index) {
-                        if (listTmp.id == parseMessage.id) {
-                            // console.log(me.list[index] + ':' + parseMessage);
-                            if (parseMessage.instanceState == 'DELETE') {
-                                me.list = [
-                                    ...me.list.slice(0, index),
-                                    ...me.list.slice(index + 1)
-                                ]
-                            } else {
-                                me.list = [
-                                    ...me.list.slice(0, index),
-                                    parseMessage,
-                                    ...me.list.slice(index + 1)
-                                ]
-                            }
-                            me.list.sort(function (a, b) {
-                                return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
-                            });
-                        } else if (!listNameListTmp.includes(parseMessage.id)) {
-                            if (!(parseMessage.instanceState == 'DELETE')) {
-                                me.list.push(parseMessage)
-                                listNameListTmp.push(parseMessage.id)
-
+                        me.list.some(function (listTmp, index) {
+                            if (listTmp.id == parseMessage.id) {
+                                // console.log(me.list[index] + ':' + parseMessage);
+                                if (parseMessage.instanceState == 'DELETE') {
+                                    me.list = [
+                                        ...me.list.slice(0, index),
+                                        ...me.list.slice(index + 1)
+                                    ]
+                                } else {
+                                    me.list = [
+                                        ...me.list.slice(0, index),
+                                        parseMessage,
+                                        ...me.list.slice(index + 1)
+                                    ]
+                                }
                                 me.list.sort(function (a, b) {
-                                    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+                                    return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
                                 });
+                            } else if (!listNameListTmp.includes(parseMessage.id)) {
+                                if (!(parseMessage.instanceState == 'DELETE')) {
+                                    me.list.push(parseMessage)
+                                    listNameListTmp.push(parseMessage.id)
 
-                                return;
+                                    me.list.sort(function (a, b) {
+                                        return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+                                    });
+
+                                    return;
+                                }
                             }
+                        })
+
+                    }
+
+                    me.evtSource.onerror = function (e) {
+                        if (me.evtSource) {
+                            console.log("closing evtSource and reconnect");
+                            me.evtSource.close();
+                            me.startSSE(user);
                         }
-                    })
-
-                }
-
-                me.evtSource.onerror = function (e) {
-                    if (me.evtSource) {
-                        console.log("closing evtSource and reconnect");
-                        me.evtSource.close();
-                        setTimeout(function () {
-                            if (me.user != null) {
-                                me.startSSE(user);
-                            } else {
-                                me.startSSE();
-                            }
-                        }, 3000)
-
                     }
                 }
             },

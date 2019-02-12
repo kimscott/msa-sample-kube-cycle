@@ -1,6 +1,6 @@
 <template>
     <div class="dashboardpage">
-        <el-button @click="user=null">Master</el-button>
+        <el-button @click="user=[{provider: 'All' , name: 'All'}]">Master</el-button>
         <el-button @click="user=[{provider: 'EC2' , name: 'nodes.jjy.k8s.local'}]">User 1</el-button>
         <el-button @click="user=[{provider: 'K8S' , name: 'test'}]">User 2</el-button>
         <el-button @click="user=[{provider: 'K8S' , name: 'default'}, {provider: 'EC2' , name: 'nodes.jjy.k8s.local'}]">User 3</el-button>
@@ -16,7 +16,7 @@
         name: 'home',
         data() {
             return {
-                user: [{provider: 'EC2', name:'1'}]
+                user: [{provider: 'All', name:'All'}]
             }
         },
         components: {

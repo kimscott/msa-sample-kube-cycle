@@ -24,7 +24,7 @@ public class AppEntityBaseMessageHandler {
         try {
 
             AppEntityBaseMessage message = new AppEntityBaseMessage();
-            message.setName(provider);
+            message.setProvider(provider);
             message.setName(name);
             message.setMessage(jsonData);
             LOGGER.error("Published");

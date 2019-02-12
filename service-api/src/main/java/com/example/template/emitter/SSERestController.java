@@ -53,10 +53,10 @@ public class SSERestController {
                 /*
                     todo : nameSpace 조건 부분
                  */
-                LOGGER.info("appEntityBaseMessage");
-                if(emitter.getName() == null) {
+                LOGGER.info("emitter :" + emitter.getName());
+                if(appEntityBaseMessage.getName().equals(emitter.getName()) && appEntityBaseMessage.getProvider().equals(emitter.getProvider())) {
                     emitter.send(appEntityBaseMessage);
-                } else if(appEntityBaseMessage.getName().equals(emitter.getName()) && appEntityBaseMessage.getProvider().equals(emitter.getProvider())) {
+                } else if(emitter.getName() == null) {
                     emitter.send(appEntityBaseMessage);
                 }
             } catch (Exception e) {
