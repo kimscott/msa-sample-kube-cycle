@@ -293,7 +293,9 @@
                         if (me.evtSource) {
                             console.log("closing evtSource and reconnect");
                             me.evtSource.close();
-                            me.startSSE(user);
+                            setTimeout(function () {
+                                me.startSSE(user);
+                            }, 3000)
                         }
                     }
                 }
