@@ -230,16 +230,29 @@
                 });
             },
             startSSE: function (user) {
-                // promise a.then(alert)
+
                 var me = this;
-                // this.getNameSpace();
-                if (user == null) {
-                    me.evtSource = new EventSource(`${API_HOST}/kubesse/`)
+                if(user != null) {
+                    if(user.constructor == 'Array') {
+                        user.forEach(function (userData) {
+                            if (userData.provider == 'K8S') {
+                                me.evtSource = new EventSource(`${API_HOST}/kubesse/?provider=` + userData.provider + '?name=' + userData.name )
+                            }
+                            var tmp = [];
+                        });
+                    } else {
+                        if (user.provider == 'K8S') {
+                            me.evtSource = new EventSource(`${API_HOST}/kubesse/?provider=` + user.provider + '?name=' + user.name )
+                        } else {
+                            me.evtSource = new EventSource(`${API_HOST}/kubesse/`)
+                        }
+                        var tmp = [];
+                    }
                 } else {
-                    var jsonUser = JSON.stringify(user)
-                    this.evtSource = new EventSource(`${API_HOST}/kubesse?` + encodeURI(jsonUser))
+                    me.evtSource = new EventSource(`${API_HOST}/kubesse/`)
                 }
-                var tmp = [];
+
+
                 me.evtSource.onmessage = function (e) {
                     var parse = JSON.parse(e.data);
                     var parseMessage = JSON.parse(parse.message);

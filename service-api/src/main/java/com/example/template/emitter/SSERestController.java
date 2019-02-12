@@ -34,8 +34,6 @@ public class SSERestController {
     ) {
         KubeEmitter emitter = new KubeEmitter(name, provider);
         userBaseEmitters.add(emitter);
-        System.out.println("before: " + this.userBaseEmitters.size());
-//        this.nameSpace = nameSpace;
 
         emitter.onCompletion(() -> this.userBaseEmitters.remove(emitter));
         emitter.onTimeout(() -> {

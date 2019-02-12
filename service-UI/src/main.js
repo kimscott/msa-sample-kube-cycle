@@ -7,6 +7,8 @@ import Element from 'element-ui'
 import locale from 'element-ui/lib/locale/lang/ko'
 import VueCodemirror from 'vue-codemirror'
 import 'codemirror/lib/codemirror.css'
+// import 'codemirror/theme/blackboard.css'
+
 
 Vue.use(VueCodemirror);
 
