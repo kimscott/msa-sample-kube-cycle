@@ -81,30 +81,8 @@
                 </el-table-column>
 
             </el-table>
-            <!--<vuetable ref="pods"-->
-            <!--:fields="['kubePodId.namespace', 'kubePodId.name', 'statusType', 'phase', 'startTime', 'updateTime', 'endTime']"-->
-            <!--:data="list"-->
-            <!--&gt;-->
-            <!--</vuetable>-->
+
         </div>
-        <!--<div class="table">-->
-        <!--<h2>Services</h2>-->
-        <!--<vuetable ref="services"-->
-        <!--:fields="['nameSpace', 'service', 'pod', 'deployment', 'replicaSet']"-->
-        <!--:data="list"-->
-        <!--&gt;-->
-        <!--</vuetable>-->
-        <!--</div>-->
-        <!--
-        <div class="table">
-            <h2>Jobs</h2>
-            <vuetable ref="jobs"
-                      :fields="['kubePodId.namespace', 'kubePodId.name', 'statusType', 'phase', 'startTime', 'updateTime', 'endTime']"
-                      :data="list2"
-            >
-            </vuetable>
-        </div>
-        -->
     </div>
 </template>
 
@@ -125,7 +103,6 @@
         data() {
             return {
                 evtSource: null,
-                // nameSpaceList: [{id: 0, name: 'All'}],
                 selectedNamespace: {},
                 list: [],
                 providerFilters: []
@@ -133,55 +110,60 @@
         },
 
         beforeDestroy: function () {
+            var me = this
             console.log("closing evtSource beforeDestroy");
-            this.evtSource.close();
+            me.evtSource.close();
         },
         mounted() {
             var me = this;
-            this.startSSE(me.user);
-            // this.getNameSpace().then(function (list) {
-            //     /* Provider별 정렬 */
-            //     list.sort(function (a, b) {
-            //         return a.provider < b.provider ? -1 : a.provider > b.provider ? 1 : 0;
-            //     });
-            //     me.list = list
-            // });
+            // console.log(me.user)
+            me.startSSE(me.user[0]);
+            this.getNameSpace().then(function (list) {
+                /* Provider별 정렬 */
+                list.sort(function (a, b) {
+                    return a.provider < b.provider ? -1 : a.provider > b.provider ? 1 : 0;
+                });
+                me.list = list
+            });
         },
 
         watch: {
             user: function (newVal) {
-                this.evtSource.close();
-                var me = this;
-                var resultArray = [];
-                if (newVal == null) {
-                    var provider = 'All'
-                } else {
-                    var name = newVal.name;
-                    var provider = newVal.provider
+                var me = this
+                if (me.evtSource != null) {
+                    me.evtSource.close();
                 }
-                if (provider == 'All') {
-                    me.$http.get(`${API_HOST}/kube/instance/`)
-                        .then((result) => {
-                            me.list = [];
-                            me.list = result.data;
-                            me.list.sort(function (a, b) {
-                                return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+                me.list = [];
+                var name;
+                var provider;
+                var resultArray = [];
+
+                newVal.forEach(function (tmp, index) {
+                    name = tmp.name;
+                    provider = tmp.provider;
+                    if (provider == 'All') {
+                        me.$http.get(`${API_HOST}/kube/instance/`)
+                            .then((result) => {
+                                me.list = result.data;
+                                me.list.sort(function (a, b) {
+                                    return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+                                });
                             });
-                        });
-                    if (me.evtSource != null) {
-                        me.evtSource.close();
-                        me.startSSE(newVal);
-                    }
-                } else {
-                    newVal.forEach(function (newValData) {
+                        if (me.evtSource != null) {
+                            me.evtSource.close();
+                            // console.log('All ' + tmp)
+                            console.log(tmp)
+                            me.startSSE(tmp);
+                        }
+                    } else {
                         return new Promise(function (resolve, reject) {
                             var responseList = [];
-                            me.$http.get(`${API_HOST}/kube/instance/` + newValData.provider + '/' + newValData.name)
+                            me.$http.get(`${API_HOST}/kube/instance/` + provider + '/' + name)
                                 .then((result) => {
                                     me.list = [];
                                     if (me.list.length == 0) {
                                         result.data.forEach(function (data) {
-                                            if (!(newValData.instanceState == 'DELETE')) {
+                                            if (!(data.instanceState == 'DELETE')) {
                                                 resultArray.push(data)
                                             }
                                         })
@@ -194,14 +176,16 @@
                                     return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
                                 })
                                 me.list = list
-                                if (me.evtSource != null) {
+                                if (me.evtSource != null && newVal[index].provider =='K8S') {
                                     me.evtSource.close();
-                                    me.startSSE(newValData);
+                                    console.log(newVal[index].provider)
+                                    me.startSSE(newVal[index]);
                                 }
                             }
                         );
-                    })
-                }
+                    }
+
+                })
             },
         },
         methods: {
@@ -225,81 +209,73 @@
                             }
                             resolve(responseList);
                         })
-
                 });
             },
             startSSE: function (user) {
                 var me = this;
-                // me.evtSource.close();
-                if(user != null) {
-                    if(user.constructor == 'Array') {
-                        user.forEach(function (userData) {
-                            if (userData.provider == 'K8S') {
-                                me.evtSource = new EventSource(`${API_HOST}/kubesse/?provider=` + userData.provider + '&name=' + userData.name )
+                var tmp = [];
+
+                if (!(user.provider == 'All')) {
+                    me.evtSource = new EventSource(`${API_HOST}/kubesse/?provider=` + user.provider + '&name=' + user.name)
+                } else {
+                    me.evtSource = new EventSource(`${API_HOST}/kubesse/`)
+                }
+                me.evtSource.onmessage = function (e) {
+                    var parse = JSON.parse(e.data);
+                    var parseMessage = JSON.parse(parse.message);
+                    var listNameListTmp = [];
+                    me.list.forEach(function (name) {
+                        listNameListTmp.push(name.id)
+                    });
+
+                    me.list.some(function (listTmp, index) {
+                        if (listTmp.id == parseMessage.id) {
+                            // console.log(me.list[index] + ':' + parseMessage);
+                            if (parseMessage.instanceState == 'DELETE') {
+                                me.list = [
+                                    ...me.list.slice(0, index),
+                                    ...me.list.slice(index + 1)
+                                ]
+                            } else {
+                                me.list = [
+                                    ...me.list.slice(0, index),
+                                    parseMessage,
+                                    ...me.list.slice(index + 1)
+                                ]
                             }
-                            var tmp = [];
-                        });
-                    } else {
-                        if (user.provider == 'K8S') {
-                            me.evtSource = new EventSource(`${API_HOST}/kubesse/?provider=` + user.provider + '&name=' + user.name )
-                        } else {
-                            me.evtSource = new EventSource(`${API_HOST}/kubesse/`)
-                        }
-                        var tmp = [];
-                    }
-                    me.evtSource.onmessage = function (e) {
-                        var parse = JSON.parse(e.data);
-                        var parseMessage = JSON.parse(parse.message);
-                        var listNameListTmp = [];
-                        me.list.forEach(function (name) {
-                            listNameListTmp.push(name.id)
-                        });
+                            me.list.sort(function (a, b) {
+                                return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+                            });
+                        } else if (!listNameListTmp.includes(parseMessage.id)) {
+                            if (!(parseMessage.instanceState == 'DELETE')) {
+                                me.list.push(parseMessage)
+                                listNameListTmp.push(parseMessage.id)
 
-                        me.list.some(function (listTmp, index) {
-                            if (listTmp.id == parseMessage.id) {
-                                // console.log(me.list[index] + ':' + parseMessage);
-                                if (parseMessage.instanceState == 'DELETE') {
-                                    me.list = [
-                                        ...me.list.slice(0, index),
-                                        ...me.list.slice(index + 1)
-                                    ]
-                                } else {
-                                    me.list = [
-                                        ...me.list.slice(0, index),
-                                        parseMessage,
-                                        ...me.list.slice(index + 1)
-                                    ]
-                                }
                                 me.list.sort(function (a, b) {
-                                    return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+                                    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
                                 });
-                            } else if (!listNameListTmp.includes(parseMessage.id)) {
-                                if (!(parseMessage.instanceState == 'DELETE')) {
-                                    me.list.push(parseMessage)
-                                    listNameListTmp.push(parseMessage.id)
 
-                                    me.list.sort(function (a, b) {
-                                        return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
-                                    });
+                                return;
+                            }
+                        }
+                    })
 
-                                    return;
-                                }
+                }
+                me.evtSource.onerror = function (e) {
+                    if (me.evtSource) {
+                        console.log("closing evtSource and reconnect");
+                        setTimeout(function () {
+                        me.user.forEach(function (usr) {
+                            if (usr.provider == 'K8S') {
+                                me.evtSource.close();
+                                console.log(usr.provider)
+                                me.startSSE(usr);
                             }
                         })
-
-                    }
-
-                    me.evtSource.onerror = function (e) {
-                        if (me.evtSource) {
-                            console.log("closing evtSource and reconnect");
-                            me.evtSource.close();
-                            setTimeout(function () {
-                                me.startSSE(user);
-                            }, 3000)
-                        }
+                        }, 3000)
                     }
                 }
-            },
+            }
         },
     }
 </script>
